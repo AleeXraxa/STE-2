@@ -140,7 +140,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
           (controller.isLoading.value ? 1 : 0),
       itemBuilder: (context, index) {
         if (index < controller.chatMessages.length) {
-          return _buildMessageBubble(controller.chatMessages[index]);
+          return _buildMessageBubble(controller.chatMessages[index],
+              index: index);
         } else if (controller.isListening.value &&
             index == controller.chatMessages.length) {
           return _buildMessageBubble(controller.livePartialText.value,
@@ -153,7 +154,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
     );
   }
 
-  Widget _buildMessageBubble(dynamic message, {bool isPartial = false}) {
+  Widget _buildMessageBubble(dynamic message,
+      {bool isPartial = false, int index = -1}) {
     String text;
     bool isUser;
     if (message is ChatMessage) {
@@ -190,13 +192,34 @@ class _AssistantScreenState extends State<AssistantScreen> {
               ),
             ],
           ),
-          child: Text(
-            text,
-            style: GoogleFonts.montserrat(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  text,
+                  style: GoogleFonts.montserrat(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (!isUser && !isPartial && index != -1)
+                Obx(() => GestureDetector(
+                      onTap: () => controller.speakText(text, index),
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Icon(
+                          controller.speakingIndex.value == index
+                              ? Icons.stop
+                              : Icons.play_arrow,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                      ),
+                    )),
+            ],
           ),
         ),
       ),

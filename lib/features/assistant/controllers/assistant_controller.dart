@@ -1,16 +1,19 @@
 import 'package:get/get.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart';
 
 class AssistantController extends GetxController {
   final SpeechToText _speechToText = SpeechToText();
+  final FlutterTts _flutterTts = FlutterTts();
   final AIService _aiService = AIService();
 
   RxBool isListening = false.obs;
   RxString livePartialText = ''.obs;
   RxList<ChatMessage> chatMessages = <ChatMessage>[].obs;
   RxBool isLoading = false.obs;
+  RxInt speakingIndex = (-1).obs;
 
   @override
   void onInit() {
@@ -57,6 +60,19 @@ class AssistantController extends GetxController {
 
   void stopListening() {
     _speechToText.stop();
+  }
+
+  void speakText(String text, int index) async {
+    if (speakingIndex.value == index) {
+      await _flutterTts.stop();
+      speakingIndex.value = -1;
+    } else {
+      speakingIndex.value = index;
+      await _flutterTts.speak(text);
+      _flutterTts.setCompletionHandler(() {
+        speakingIndex.value = -1;
+      });
+    }
   }
 
   void _addUserMessage(String text) {
