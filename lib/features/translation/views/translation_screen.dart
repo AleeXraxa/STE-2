@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/translation_controller.dart';
+import '../models/message.dart';
+import 'chat_bubble.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 
@@ -70,96 +72,13 @@ class _TranslationScreenState extends State<TranslationScreen> {
               ),
             ),
             Expanded(
-              child: Obx(() {
-                List<Widget> messageWidgets = [];
-                for (var msg in controller.englishMessages) {
-                  messageWidgets.add(
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        margin:
-                            EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'EN: $msg',
-                          style:
-                              AppTextStyles.body.copyWith(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                for (var msg in controller.spanishMessages) {
-                  messageWidgets.add(
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        margin:
-                            EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'ES: $msg',
-                          style:
-                              AppTextStyles.body.copyWith(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                if (controller.currentEnglishText.value.isNotEmpty) {
-                  messageWidgets.add(
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        margin:
-                            EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'EN: ${controller.currentEnglishText.value}',
-                          style:
-                              AppTextStyles.body.copyWith(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                if (controller.currentSpanishText.value.isNotEmpty) {
-                  messageWidgets.add(
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        margin:
-                            EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'ES: ${controller.currentSpanishText.value}',
-                          style:
-                              AppTextStyles.body.copyWith(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-                return ListView(
-                  children: messageWidgets,
-                );
-              }),
+              child: Obx(() => ListView.builder(
+                    itemCount: controller.messages.length,
+                    itemBuilder: (context, index) {
+                      final message = controller.messages[index];
+                      return ChatBubble(message: message);
+                    },
+                  )),
             ),
             Container(
               padding: EdgeInsets.all(20.0),

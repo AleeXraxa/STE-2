@@ -1,15 +1,13 @@
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import '../models/message.dart';
 
 class TranslationController extends GetxController {
   final SpeechToText _speechToText = SpeechToText();
   var isListeningEnglish = false.obs;
   var isListeningSpanish = false.obs;
-  var englishMessages = <String>[].obs;
-  var spanishMessages = <String>[].obs;
-  var currentEnglishText = ''.obs;
-  var currentSpanishText = ''.obs;
+  var messages = <Message>[].obs;
 
   @override
   void onInit() {
@@ -52,13 +50,11 @@ class TranslationController extends GetxController {
       bool available = await _speechToText.initialize();
       if (available) {
         isListeningEnglish.value = true;
-        currentEnglishText.value = '';
         await _speechToText.listen(
           onResult: (result) {
-            currentEnglishText.value = result.recognizedWords;
             if (result.finalResult) {
-              englishMessages.add(result.recognizedWords);
-              currentEnglishText.value = '';
+              messages.add(Message(
+                  text: result.recognizedWords, language: 'en', isUser: true));
               stopListeningEnglish();
             }
           },
@@ -85,13 +81,11 @@ class TranslationController extends GetxController {
       bool available = await _speechToText.initialize();
       if (available) {
         isListeningSpanish.value = true;
-        currentSpanishText.value = '';
         await _speechToText.listen(
           onResult: (result) {
-            currentSpanishText.value = result.recognizedWords;
             if (result.finalResult) {
-              spanishMessages.add(result.recognizedWords);
-              currentSpanishText.value = '';
+              messages.add(Message(
+                  text: result.recognizedWords, language: 'es', isUser: true));
               stopListeningSpanish();
             }
           },
