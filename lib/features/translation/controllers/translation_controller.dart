@@ -2,20 +2,26 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translator/translator.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../models/message.dart';
 
 class TranslationController extends GetxController {
   final SpeechToText _speechToText = SpeechToText();
   final GoogleTranslator translator = GoogleTranslator();
+  final FlutterTts tts = FlutterTts();
   var isListeningEnglish = false.obs;
   var isListeningSpanish = false.obs;
   var chatMessages = <Message>[].obs;
+  var playingIndex = (-1).obs;
 
   @override
   void onInit() {
     super.onInit();
     requestMicrophonePermission();
     _initializeSpeech();
+    tts.setCompletionHandler(() {
+      playingIndex.value = -1;
+    });
   }
 
   Future<void> _initializeSpeech() async {
@@ -119,5 +125,26 @@ class TranslationController extends GetxController {
       await _speechToText.stop();
       isListeningSpanish.value = false;
     }
+  }
+
+  Future<void> play(int index) async {
+    if (playingIndex.value != -1 && playingIndex.value != index) {
+      await stopPlaying();
+    }
+    if (playingIndex.value == index) {
+      await stopPlaying();
+    } else {
+      // stop listening
+      if (isListeningEnglish.value) await stopListeningEnglish();
+      if (isListeningSpanish.value) await stopListeningSpanish();
+      // play
+      await tts.speak(chatMessages[index].translated);
+      playingIndex.value = index;
+    }
+  }
+
+  Future<void> stopPlaying() async {
+    await tts.stop();
+    playingIndex.value = -1;
   }
 }

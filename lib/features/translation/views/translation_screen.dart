@@ -76,7 +76,10 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     itemCount: controller.chatMessages.length,
                     itemBuilder: (context, index) {
                       final message = controller.chatMessages[index];
-                      return ChatBubble(message: message);
+                      return ChatBubble(
+                          message: message,
+                          index: index,
+                          controller: controller);
                     },
                   )),
             ),
