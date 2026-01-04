@@ -24,14 +24,23 @@ class _TranslationScreenState extends State<TranslationScreen> {
   Widget build(BuildContext context) {
     return GetBuilder<TranslationController>(
       builder: (controller) => Scaffold(
+        backgroundColor: AppColors.darkBackground,
         appBar: AppBar(
+          elevation: 0,
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Get.back(),
           ),
-          title: Text('Translation Machine'),
-          backgroundColor: AppColors.primary,
-          actions: [IconButton(icon: Icon(Icons.edit), onPressed: () {})],
+          title: Text('Translation Machine',
+              style: AppTextStyles.heading.copyWith(fontSize: 18)),
+          backgroundColor: AppColors.darkBackground,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.edit, color: Colors.white),
+              onPressed: () {},
+            )
+          ],
         ),
         body: Column(
           children: [
@@ -42,30 +51,87 @@ class _TranslationScreenState extends State<TranslationScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        textStyle: AppTextStyles.button,
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: AppColors.darkBackground,
+                        borderRadius: BorderRadius.circular(25),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.2)),
                       ),
-                      child: Text('English'),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Text(
+                                'English',
+                                style: AppTextStyles.button.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.arrow_drop_down,
+                                color: AppColors.gradientEnd),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(width: 10),
-                  Icon(Icons.swap_horiz, color: Colors.white, size: 30),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary, AppColors.gradientEnd],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.swap_horiz, color: Colors.white),
+                      onPressed: () {},
+                    ),
+                  ),
                   SizedBox(width: 10),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        textStyle: AppTextStyles.button,
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: AppColors.darkBackground,
+                        borderRadius: BorderRadius.circular(25),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.2)),
                       ),
-                      child: Text('Spanish'),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Text(
+                                'Spanish',
+                                style: AppTextStyles.button.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.arrow_drop_down,
+                                color: AppColors.gradientEnd),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -88,37 +154,71 @@ class _TranslationScreenState extends State<TranslationScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Obx(() => ElevatedButton.icon(
-                          onPressed: controller.isListeningEnglish.value
-                              ? () => controller.stopListeningEnglish()
-                              : () => controller.startListeningEnglish(),
-                          icon: Icon(controller.isListeningEnglish.value
-                              ? Icons.stop
-                              : Icons.mic),
-                          label: Text('English'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            textStyle: AppTextStyles.button,
-                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Obx(() => Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: AppColors.darkBackground,
+                            borderRadius: BorderRadius.circular(25),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.2)),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: controller.isListeningEnglish.value
+                                ? () => controller.stopListeningEnglish()
+                                : () => controller.startListeningEnglish(),
+                            icon: Icon(
+                              controller.isListeningEnglish.value
+                                  ? Icons.stop
+                                  : Icons.mic,
+                              color: AppColors.gradientEnd,
+                            ),
+                            label: Text('Speak English'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              textStyle: AppTextStyles.button.copyWith(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                              padding: EdgeInsets.symmetric(horizontal: 16.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
                           ),
                         )),
                   ),
                   SizedBox(width: 10),
                   Expanded(
-                    child: Obx(() => ElevatedButton.icon(
-                          onPressed: controller.isListeningSpanish.value
-                              ? () => controller.stopListeningSpanish()
-                              : () => controller.startListeningSpanish(),
-                          icon: Icon(controller.isListeningSpanish.value
-                              ? Icons.stop
-                              : Icons.mic),
-                          label: Text('Spanish'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            textStyle: AppTextStyles.button,
-                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Obx(() => Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: AppColors.darkBackground,
+                            borderRadius: BorderRadius.circular(25),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.2)),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: controller.isListeningSpanish.value
+                                ? () => controller.stopListeningSpanish()
+                                : () => controller.startListeningSpanish(),
+                            icon: Icon(
+                              controller.isListeningSpanish.value
+                                  ? Icons.stop
+                                  : Icons.mic,
+                              color: AppColors.gradientEnd,
+                            ),
+                            label: Text('Speak Spanish'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              textStyle: AppTextStyles.button.copyWith(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                              padding: EdgeInsets.symmetric(horizontal: 16.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
+                              ),
+                            ),
                           ),
                         )),
                   ),

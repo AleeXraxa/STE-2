@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'colors.dart';
 
 class AppTextStyles {
-  static const TextStyle heading = TextStyle(
+  static TextStyle heading = GoogleFonts.poppins(
     fontSize: 24,
     fontWeight: FontWeight.bold,
     color: Colors.white,
   );
 
-  static const TextStyle body = TextStyle(fontSize: 16, color: Colors.white);
+  static TextStyle body = GoogleFonts.montserrat(
+    fontSize: 16,
+    color: AppColors.text,
+  );
 
-  static const TextStyle button = TextStyle(
+  static TextStyle button = GoogleFonts.montserrat(
     fontSize: 18,
     fontWeight: FontWeight.w500,
     color: Colors.white,
