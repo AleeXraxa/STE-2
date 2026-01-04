@@ -92,59 +92,62 @@ class HomeScreen extends StatelessWidget {
               }),
             ),
             SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              height: 90,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF00453d), Color(0xFF01201b)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
+            GestureDetector(
+              onTap: () => Get.toNamed('/assistant'),
+              child: Container(
+                width: double.infinity,
+                height: 90,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF00453d), Color(0xFF01201b)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Hi ~ I\'m your AI assistant',
-                      style: AppTextStyles.body.copyWith(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 12),
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.6,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Tap to start Chatting',
-                              style: AppTextStyles.body.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward,
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Hi ~ I\'m your AI assistant',
+                        style: AppTextStyles.body.copyWith(
                             color: Colors.white,
-                            size: 16,
-                          ),
-                        ],
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 12),
+                      Container(
+                        width: MediaQuery.of(context).size.width * 0.6,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Tap to start Chatting',
+                                style: AppTextStyles.body.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
