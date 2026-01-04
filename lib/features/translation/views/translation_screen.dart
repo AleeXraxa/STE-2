@@ -73,9 +73,9 @@ class _TranslationScreenState extends State<TranslationScreen> {
             ),
             Expanded(
               child: Obx(() => ListView.builder(
-                    itemCount: controller.messages.length,
+                    itemCount: controller.chatMessages.length,
                     itemBuilder: (context, index) {
-                      final message = controller.messages[index];
+                      final message = controller.chatMessages[index];
                       return ChatBubble(message: message);
                     },
                   )),

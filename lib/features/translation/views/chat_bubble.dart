@@ -10,7 +10,7 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isEnglish = message.language == 'en';
+    bool isEnglish = message.sourceLang == 'en';
     return Align(
       alignment: isEnglish ? Alignment.centerLeft : Alignment.centerRight,
       child: Container(
@@ -20,9 +20,22 @@ class ChatBubble extends StatelessWidget {
           color: isEnglish ? AppColors.primary : AppColors.secondary,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(
-          '${isEnglish ? 'EN' : 'ES'}: ${message.text}',
-          style: AppTextStyles.body.copyWith(color: Colors.white),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.original,
+              style: AppTextStyles.body
+                  .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 4),
+            Text(
+              message.translated,
+              style: AppTextStyles.body
+                  .copyWith(color: Colors.white, fontStyle: FontStyle.italic),
+            ),
+          ],
         ),
       ),
     );

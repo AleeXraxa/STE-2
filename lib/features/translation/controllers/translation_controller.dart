@@ -1,13 +1,15 @@
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:translator/translator.dart';
 import '../models/message.dart';
 
 class TranslationController extends GetxController {
   final SpeechToText _speechToText = SpeechToText();
+  final GoogleTranslator translator = GoogleTranslator();
   var isListeningEnglish = false.obs;
   var isListeningSpanish = false.obs;
-  var messages = <Message>[].obs;
+  var chatMessages = <Message>[].obs;
 
   @override
   void onInit() {
@@ -42,6 +44,23 @@ class TranslationController extends GetxController {
     }
   }
 
+  Future<void> _addMessage(
+      String original, String fromLang, String toLang) async {
+    try {
+      var translation =
+          await translator.translate(original, from: fromLang, to: toLang);
+      chatMessages.add(Message(
+          original: original,
+          translated: translation.text,
+          sourceLang: fromLang));
+    } catch (e) {
+      chatMessages.add(Message(
+          original: original,
+          translated: "Translation failed",
+          sourceLang: fromLang));
+    }
+  }
+
   Future<void> startListeningEnglish() async {
     if (isListeningSpanish.value) {
       await stopListeningSpanish();
@@ -53,8 +72,7 @@ class TranslationController extends GetxController {
         await _speechToText.listen(
           onResult: (result) {
             if (result.finalResult) {
-              messages.add(Message(
-                  text: result.recognizedWords, language: 'en', isUser: true));
+              _addMessage(result.recognizedWords, 'en', 'es');
               stopListeningEnglish();
             }
           },
@@ -84,8 +102,7 @@ class TranslationController extends GetxController {
         await _speechToText.listen(
           onResult: (result) {
             if (result.finalResult) {
-              messages.add(Message(
-                  text: result.recognizedWords, language: 'es', isUser: true));
+              _addMessage(result.recognizedWords, 'es', 'en');
               stopListeningSpanish();
             }
           },

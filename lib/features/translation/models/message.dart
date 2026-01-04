@@ -1,12 +1,12 @@
 class Message {
-  final String text;
-  final String language;
-  final bool isUser;
-  final bool isPartial;
+  final String original;
+
+  final String translated;
+
+  final String sourceLang;
 
   Message(
-      {required this.text,
-      required this.language,
-      required this.isUser,
-      this.isPartial = false});
+      {required this.original,
+      required this.translated,
+      required this.sourceLang});
 }
