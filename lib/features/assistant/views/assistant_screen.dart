@@ -327,35 +327,43 @@ class _AssistantScreenState extends State<AssistantScreen> {
               children: [
                 Expanded(
                   flex: 5,
-                  child: GestureDetector(
-                    onTap: controller.startListening,
-                    child: Container(
-                      height: 50,
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.buttonBackground,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white, width: 1),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.mic, color: Colors.white, size: 20),
-                          SizedBox(width: 8),
-                          Obx(() => Text(
+                  child: Obx(() => GestureDetector(
+                        onTap: controller.isListening.value
+                            ? controller.stopListening
+                            : controller.startListening,
+                        child: Container(
+                          height: 50,
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.buttonBackground,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.white, width: 1),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
                                 controller.isListening.value
-                                    ? 'Listening…'
+                                    ? Icons.stop
+                                    : Icons.mic,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                controller.isListening.value
+                                    ? 'Stop & Send'
                                     : 'Click and Speak',
                                 style: GoogleFonts.montserrat(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
-                              )),
-                        ],
-                      ),
-                    ),
-                  ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )),
                 ),
                 SizedBox(width: 10),
                 Expanded(

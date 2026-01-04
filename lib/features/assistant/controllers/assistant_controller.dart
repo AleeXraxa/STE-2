@@ -43,6 +43,7 @@ class AssistantController extends GetxController {
 
   void startListening() async {
     if (!isListening.value && _speechToText.isAvailable) {
+      livePartialText.value = '';
       isListening.value = true;
       await _speechToText.listen(
         partialResults: true,
