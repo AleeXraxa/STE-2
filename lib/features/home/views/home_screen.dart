@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/services/bluetooth_service.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    Get.put(BluetoothService());
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -30,36 +32,64 @@ class HomeScreen extends StatelessWidget {
           children: [
             SizedBox(height: 40),
             Center(
-              child: Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.gradientEnd],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+              child: Obx(() {
+                final bluetoothService = Get.find<BluetoothService>();
+                if (bluetoothService.connectedDeviceName.value.isEmpty) {
+                  return Column(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [AppColors.primary, AppColors.gradientEnd],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                        child: IconButton(
+                          icon: Icon(Icons.add, color: Colors.white, size: 30),
+                          onPressed: () {
+                            bluetoothService.openBluetoothSettings();
+                          },
+                        ),
                       ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Connect',
+                        style: AppTextStyles.body.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white),
+                      ),
+                    ],
+                  );
+                } else {
+                  return GestureDetector(
+                    onTap: () {
+                      bluetoothService.disconnect();
+                    },
+                    child: Column(
+                      children: [
+                        Text(
+                          bluetoothService.connectedDeviceName.value,
+                          style: AppTextStyles.heading.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          'Tap to disconnect',
+                          style: AppTextStyles.body
+                              .copyWith(fontSize: 12, color: Colors.white70),
+                        ),
+                      ],
                     ),
-                    child: IconButton(
-                      icon: Icon(Icons.add, color: Colors.white, size: 30),
-                      onPressed: () {
-                        // TODO: Implement connect functionality
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Connect',
-                    style: AppTextStyles.body.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white),
-                  ),
-                ],
-              ),
+                  );
+                }
+              }),
             ),
             SizedBox(height: 20),
             Container(
