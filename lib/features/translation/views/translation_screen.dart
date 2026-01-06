@@ -11,33 +11,71 @@ class TranslationScreen extends StatefulWidget {
   _TranslationScreenState createState() => _TranslationScreenState();
 }
 
-class _TranslationScreenState extends State<TranslationScreen> {
+class _TranslationScreenState extends State<TranslationScreen>
+    with TickerProviderStateMixin {
   late TranslationController controller;
+
+  late AnimationController _animationController;
+  late Animation<double> _bottomFadeAnimation;
 
   @override
   void initState() {
     super.initState();
     controller = Get.put(TranslationController());
+    _initializeAnimations();
+  }
+
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _bottomFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Interval(0.3, 0.6, curve: Curves.easeOut),
+    ));
+
+    _animationController.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _animationController.reset();
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return GetBuilder<TranslationController>(
       builder: (controller) => Scaffold(
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: Color(0xFFEDF2F4),
         appBar: AppBar(
           elevation: 0,
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back, color: Color(0xFF003049)),
             onPressed: () => Get.back(),
           ),
-          title: Text('Translation Machine',
-              style: AppTextStyles.heading.copyWith(fontSize: 18)),
-          backgroundColor: AppColors.darkBackground,
+          title: Text(
+            'Translation Machine',
+            style: AppTextStyles.heading
+                .copyWith(fontSize: 18, color: Color(0xFF003049)),
+          ),
+          backgroundColor: Color(0xFFEDF2F4),
           actions: [
             IconButton(
-              icon: Icon(Icons.edit, color: Colors.white),
+              icon: Icon(Icons.edit, color: Color(0xFF003049)),
               onPressed: () {},
             )
           ],
@@ -54,10 +92,17 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     child: Container(
                       height: 50,
                       decoration: BoxDecoration(
-                        color: AppColors.darkBackground,
+                        color: Color(0xFFEDF2F4),
                         borderRadius: BorderRadius.circular(25),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.2)),
+                        border: Border.all(
+                            color: Color(0xFF003049).withOpacity(0.2)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
@@ -68,7 +113,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                               child: Text(
                                 'English',
                                 style: AppTextStyles.button.copyWith(
-                                    color: Colors.white,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14),
                               ),
@@ -76,7 +121,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                           ),
                           IconButton(
                             icon: Icon(Icons.arrow_drop_down,
-                                color: AppColors.gradientEnd),
+                                color: Color(0xFF003049)),
                             onPressed: () {},
                           ),
                         ],
@@ -89,11 +134,14 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     height: 50,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.gradientEnd],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
+                      color: Color(0xFF003049),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: IconButton(
                       icon: Icon(Icons.swap_horiz, color: Colors.white),
@@ -105,10 +153,17 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     child: Container(
                       height: 50,
                       decoration: BoxDecoration(
-                        color: AppColors.darkBackground,
+                        color: Color(0xFFEDF2F4),
                         borderRadius: BorderRadius.circular(25),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.2)),
+                        border: Border.all(
+                            color: Color(0xFF003049).withOpacity(0.2)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
@@ -119,7 +174,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                               child: Text(
                                 'Spanish',
                                 style: AppTextStyles.button.copyWith(
-                                    color: Colors.white,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14),
                               ),
@@ -127,7 +182,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                           ),
                           IconButton(
                             icon: Icon(Icons.arrow_drop_down,
-                                color: AppColors.gradientEnd),
+                                color: Color(0xFF003049)),
                             onPressed: () {},
                           ),
                         ],
@@ -137,30 +192,44 @@ class _TranslationScreenState extends State<TranslationScreen> {
                 ],
               ),
             ),
+
+            /// ✅ Chat Messages List
             Expanded(
-              child: Obx(() => ListView.builder(
-                    itemCount: controller.chatMessages.length,
+              child: GetBuilder<TranslationController>(
+                builder: (controller) {
+                  final messages = controller.chatMessages;
+                  return ListView.builder(
+                    itemCount: messages.length,
+                    physics: BouncingScrollPhysics(),
                     itemBuilder: (context, index) {
-                      final message = controller.chatMessages[index];
                       return ChatBubble(
-                          message: message,
-                          index: index,
-                          controller: controller);
+                        key: ValueKey(index),
+                        message: messages[index],
+                        index: index,
+                        controller: controller,
+                      );
                     },
-                  )),
+                  );
+                },
+              ),
             ),
-            Container(
-              padding: EdgeInsets.all(20.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Obx(() => Container(
+
+            /// ✅ Bottom Voice Buttons
+            FadeTransition(
+              opacity: _bottomFadeAnimation,
+              child: Container(
+                padding: EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Obx(
+                        () => Container(
                           height: 50,
                           decoration: BoxDecoration(
-                            color: AppColors.darkBackground,
+                            color: Color(0xFFEDF2F4),
                             borderRadius: BorderRadius.circular(25),
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.2)),
+                                color: Colors.black.withOpacity(0.2)),
                           ),
                           child: ElevatedButton.icon(
                             onPressed: controller.isListeningEnglish.value
@@ -170,11 +239,11 @@ class _TranslationScreenState extends State<TranslationScreen> {
                               controller.isListeningEnglish.value
                                   ? Icons.stop
                                   : Icons.mic,
-                              color: AppColors.gradientEnd,
+                              color: Colors.white,
                             ),
                             label: Text('Speak English'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
+                              backgroundColor: Color(0xFF003049),
                               shadowColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               textStyle: AppTextStyles.button.copyWith(
@@ -185,17 +254,19 @@ class _TranslationScreenState extends State<TranslationScreen> {
                               ),
                             ),
                           ),
-                        )),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Obx(() => Container(
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Obx(
+                        () => Container(
                           height: 50,
                           decoration: BoxDecoration(
-                            color: AppColors.darkBackground,
+                            color: Color(0xFFEDF2F4),
                             borderRadius: BorderRadius.circular(25),
                             border: Border.all(
-                                color: Colors.white.withOpacity(0.2)),
+                                color: Colors.black.withOpacity(0.2)),
                           ),
                           child: ElevatedButton.icon(
                             onPressed: controller.isListeningSpanish.value
@@ -205,11 +276,11 @@ class _TranslationScreenState extends State<TranslationScreen> {
                               controller.isListeningSpanish.value
                                   ? Icons.stop
                                   : Icons.mic,
-                              color: AppColors.gradientEnd,
+                              color: Colors.white,
                             ),
                             label: Text('Speak Spanish'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
+                              backgroundColor: Color(0xFF003049),
                               shadowColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               textStyle: AppTextStyles.button.copyWith(
@@ -220,9 +291,11 @@ class _TranslationScreenState extends State<TranslationScreen> {
                               ),
                             ),
                           ),
-                        )),
-                  ),
-                ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

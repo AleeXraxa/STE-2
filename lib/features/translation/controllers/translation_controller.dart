@@ -59,11 +59,13 @@ class TranslationController extends GetxController {
           original: original,
           translated: translation.text,
           sourceLang: fromLang));
+      update();
     } catch (e) {
       chatMessages.add(Message(
           original: original,
           translated: "Translation failed",
           sourceLang: fromLang));
+      update();
     }
   }
 

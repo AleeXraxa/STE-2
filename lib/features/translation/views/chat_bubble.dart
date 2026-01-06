@@ -11,107 +11,89 @@ class ChatBubble extends StatelessWidget {
   final TranslationController controller;
 
   const ChatBubble(
-      {required this.message, required this.index, required this.controller});
+      {required this.message,
+      required this.index,
+      required this.controller,
+      Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     bool isEnglish = message.sourceLang == 'en';
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 500),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: Opacity(
-            opacity: value,
-            child: Align(
-              alignment: isEnglish ? Alignment.topLeft : Alignment.topRight,
-              child: GestureDetector(
-                onTap: () {
-                  // Add interactive feedback
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Message tapped'),
-                      duration: Duration(seconds: 1),
-                      backgroundColor: AppColors.gradientEnd,
-                    ),
-                  );
-                },
-                child: Container(
-                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  padding: EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: AppColors.chatBubbleBackground,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.gradientEnd.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 5,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                    border: Border.all(
-                      color: AppColors.gradientEnd.withOpacity(0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        message.original,
-                        style: AppTextStyles.body.copyWith(
-                            color: Colors.white, fontWeight: FontWeight.w500),
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              message.translated,
-                              style: AppTextStyles.body.copyWith(
-                                  color: AppColors.gradientEnd,
-                                  fontStyle: FontStyle.italic),
-                            ),
-                          ),
-                          Obx(() => AnimatedContainer(
-                                duration: Duration(milliseconds: 200),
-                                curve: Curves.easeInOut,
-                                transform: Matrix4.identity()
-                                  ..scale(controller.playingIndex.value == index
-                                      ? 1.2
-                                      : 1.0),
-                                child: IconButton(
-                                  icon: Icon(
-                                    controller.playingIndex.value == index
-                                        ? Icons.stop
-                                        : Icons.play_arrow,
-                                    color:
-                                        controller.playingIndex.value == index
-                                            ? AppColors.gradientEnd
-                                            : Colors.white,
-                                    size: 20,
-                                  ),
-                                  onPressed: () => controller.play(index),
-                                ),
-                              )),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+    return Align(
+      alignment: isEnglish ? Alignment.topLeft : Alignment.topRight,
+      child: GestureDetector(
+        onTap: () {
+          // Add interactive feedback
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Message tapped'),
+              duration: Duration(seconds: 1),
+              backgroundColor: Color(0xFF003049),
             ),
+          );
+        },
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+          padding: EdgeInsets.all(10),
+          constraints:
+              BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
+          decoration: BoxDecoration(
+            color: isEnglish ? Color(0xFF003049) : Colors.grey[300],
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-        );
-      },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                message.original,
+                style: AppTextStyles.body.copyWith(
+                    color: isEnglish ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w500),
+              ),
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      message.translated,
+                      style: AppTextStyles.body.copyWith(
+                          color: isEnglish ? Colors.white : Colors.black,
+                          fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                  Obx(() => AnimatedContainer(
+                        duration: Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        transform: Matrix4.identity()
+                          ..scale(controller.playingIndex.value == index
+                              ? 1.2
+                              : 1.0),
+                        child: IconButton(
+                          icon: Icon(
+                            controller.playingIndex.value == index
+                                ? Icons.stop
+                                : Icons.play_arrow,
+                            color: isEnglish ? Colors.white : Colors.black,
+                            size: 20,
+                          ),
+                          onPressed: () => controller.play(index),
+                        ),
+                      )),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
