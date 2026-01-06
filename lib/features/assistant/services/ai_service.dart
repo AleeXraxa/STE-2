@@ -1,14 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/chat_message.dart';
 
 class AIService {
-  static const String _model = 'gemini-2.5-flash';
+  static const String _model = 'gemini-2.0-flash-exp';
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
-  static String get _apiKey =>
-      dotenv.env['AIzaSyAn43ednUZnJd8ZRPOaOeMLOWHQZMSnSbk'] ?? '';
+  static const String _apiKey = 'AIzaSyAn43ednUZnJd8ZRPOaOeMLOWHQZMSnSbk';
 
   Future<String> getAIResponse(List<ChatMessage> messages) async {
     if (_apiKey.isEmpty) {

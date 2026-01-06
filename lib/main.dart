@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'Multilingual Earbuds Translator',
-      initialRoute: AppRoutes.home,
+      initialRoute: AppRoutes.splash,
       getPages: AppRoutes.getPages,
       theme: ThemeData(
         scaffoldBackgroundColor: AppColors.background,
