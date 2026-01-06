@@ -7,7 +7,8 @@ class AIService {
   static const String _model = 'gemini-2.5-flash';
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
-  static String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
+  static String get _apiKey =>
+      dotenv.env['AIzaSyAn43ednUZnJd8ZRPOaOeMLOWHQZMSnSbk'] ?? '';
 
   Future<String> getAIResponse(List<ChatMessage> messages) async {
     if (_apiKey.isEmpty) {
