@@ -3,10 +3,10 @@ import 'package:http/http.dart' as http;
 import '../models/chat_message.dart';
 
 class AIService {
-  static const String _model = 'gemini-2.0-flash-exp';
+  static const String _model = 'models/gemini-flash-lite-latest';
   static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/$_model:generateContent';
-  static const String _apiKey = 'AIzaSyAn43ednUZnJd8ZRPOaOeMLOWHQZMSnSbk';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+  static const String _apiKey = 'AIzaSyDkhsgPAS5JDfHEaRHHUVm9zK68NRLa_b0';
 
   Future<String> getAIResponse(List<ChatMessage> messages) async {
     if (_apiKey.isEmpty) {
