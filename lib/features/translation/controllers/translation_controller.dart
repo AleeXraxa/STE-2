@@ -9,10 +9,33 @@ class TranslationController extends GetxController {
   final SpeechToText _speechToText = SpeechToText();
   final GoogleTranslator translator = GoogleTranslator();
   final FlutterTts tts = FlutterTts();
-  var isListeningEnglish = false.obs;
-  var isListeningSpanish = false.obs;
+
+  // Language selection
+  var selectedSourceLanguage = 'en'.obs;
+  var selectedTargetLanguage = 'es'.obs;
+  var selectedSourceLanguageName = 'English'.obs;
+  var selectedTargetLanguageName = 'Spanish'.obs;
+
+  var isListeningSource = false.obs;
+  var isListeningTarget = false.obs;
   var chatMessages = <Message>[].obs;
   var playingIndex = (-1).obs;
+
+  // Supported languages
+  final List<Map<String, String>> supportedLanguages = [
+    {'code': 'en', 'name': 'English', 'locale': 'en_US'},
+    {'code': 'es', 'name': 'Spanish', 'locale': 'es_ES'},
+    {'code': 'fr', 'name': 'French', 'locale': 'fr_FR'},
+    {'code': 'de', 'name': 'German', 'locale': 'de_DE'},
+    {'code': 'it', 'name': 'Italian', 'locale': 'it_IT'},
+    {'code': 'pt', 'name': 'Portuguese', 'locale': 'pt_PT'},
+    {'code': 'ru', 'name': 'Russian', 'locale': 'ru_RU'},
+    {'code': 'ja', 'name': 'Japanese', 'locale': 'ja_JP'},
+    {'code': 'ko', 'name': 'Korean', 'locale': 'ko_KR'},
+    {'code': 'zh', 'name': 'Chinese', 'locale': 'zh_CN'},
+    {'code': 'ar', 'name': 'Arabic', 'locale': 'ar_SA'},
+    {'code': 'hi', 'name': 'Hindi', 'locale': 'hi_IN'},
+  ];
 
   @override
   void onInit() {
@@ -69,22 +92,50 @@ class TranslationController extends GetxController {
     }
   }
 
-  Future<void> startListeningEnglish() async {
-    if (isListeningSpanish.value) {
-      await stopListeningSpanish();
+  void selectSourceLanguage(String code, String name) {
+    selectedSourceLanguage.value = code;
+    selectedSourceLanguageName.value = name;
+    update();
+  }
+
+  void selectTargetLanguage(String code, String name) {
+    selectedTargetLanguage.value = code;
+    selectedTargetLanguageName.value = name;
+    update();
+  }
+
+  void swapLanguages() {
+    final tempCode = selectedSourceLanguage.value;
+    final tempName = selectedSourceLanguageName.value;
+
+    selectedSourceLanguage.value = selectedTargetLanguage.value;
+    selectedSourceLanguageName.value = selectedTargetLanguageName.value;
+
+    selectedTargetLanguage.value = tempCode;
+    selectedTargetLanguageName.value = tempName;
+
+    update();
+  }
+
+  Future<void> startListeningSource() async {
+    if (isListeningTarget.value) {
+      await stopListeningTarget();
     }
-    if (!isListeningEnglish.value) {
+    if (!isListeningSource.value) {
       bool available = await _speechToText.initialize();
       if (available) {
-        isListeningEnglish.value = true;
+        isListeningSource.value = true;
+        final locale = supportedLanguages.firstWhere(
+            (lang) => lang['code'] == selectedSourceLanguage.value)['locale']!;
         await _speechToText.listen(
           onResult: (result) {
             if (result.finalResult) {
-              _addMessage(result.recognizedWords, 'en', 'es');
-              stopListeningEnglish();
+              _addMessage(result.recognizedWords, selectedSourceLanguage.value,
+                  selectedTargetLanguage.value);
+              stopListeningSource();
             }
           },
-          localeId: 'en_US',
+          localeId: locale,
         );
       } else {
         Get.snackbar('Error', 'Speech recognition not available');
@@ -92,29 +143,32 @@ class TranslationController extends GetxController {
     }
   }
 
-  Future<void> stopListeningEnglish() async {
-    if (isListeningEnglish.value) {
+  Future<void> stopListeningSource() async {
+    if (isListeningSource.value) {
       await _speechToText.stop();
-      isListeningEnglish.value = false;
+      isListeningSource.value = false;
     }
   }
 
-  Future<void> startListeningSpanish() async {
-    if (isListeningEnglish.value) {
-      await stopListeningEnglish();
+  Future<void> startListeningTarget() async {
+    if (isListeningSource.value) {
+      await stopListeningSource();
     }
-    if (!isListeningSpanish.value) {
+    if (!isListeningTarget.value) {
       bool available = await _speechToText.initialize();
       if (available) {
-        isListeningSpanish.value = true;
+        isListeningTarget.value = true;
+        final locale = supportedLanguages.firstWhere(
+            (lang) => lang['code'] == selectedTargetLanguage.value)['locale']!;
         await _speechToText.listen(
           onResult: (result) {
             if (result.finalResult) {
-              _addMessage(result.recognizedWords, 'es', 'en');
-              stopListeningSpanish();
+              _addMessage(result.recognizedWords, selectedTargetLanguage.value,
+                  selectedSourceLanguage.value);
+              stopListeningTarget();
             }
           },
-          localeId: 'es_ES',
+          localeId: locale,
         );
       } else {
         Get.snackbar('Error', 'Speech recognition not available');
@@ -122,10 +176,10 @@ class TranslationController extends GetxController {
     }
   }
 
-  Future<void> stopListeningSpanish() async {
-    if (isListeningSpanish.value) {
+  Future<void> stopListeningTarget() async {
+    if (isListeningTarget.value) {
       await _speechToText.stop();
-      isListeningSpanish.value = false;
+      isListeningTarget.value = false;
     }
   }
 
@@ -137,8 +191,8 @@ class TranslationController extends GetxController {
       await stopPlaying();
     } else {
       // stop listening
-      if (isListeningEnglish.value) await stopListeningEnglish();
-      if (isListeningSpanish.value) await stopListeningSpanish();
+      if (isListeningSource.value) await stopListeningSource();
+      if (isListeningTarget.value) await stopListeningTarget();
       // play
       await tts.speak(chatMessages[index].translated);
       playingIndex.value = index;

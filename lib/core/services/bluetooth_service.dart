@@ -39,7 +39,7 @@ class BluetoothService extends GetxController {
 
       if (adapterState == BluetoothAdapterState.on) {
         // First check for BLE devices connected by this app
-        var connected = await FlutterBluePlus.connectedDevices;
+        var connected = FlutterBluePlus.connectedDevices;
         print('DEBUG: Found ${connected.length} BLE connected devices');
 
         if (connected.isNotEmpty) {

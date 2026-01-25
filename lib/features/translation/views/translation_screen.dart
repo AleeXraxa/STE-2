@@ -53,6 +53,49 @@ class _TranslationScreenState extends State<TranslationScreen>
     super.dispose();
   }
 
+  void _showLanguagePicker(bool isSource) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Select ${isSource ? 'Source' : 'Target'} Language',
+                  style: AppTextStyles.heading.copyWith(fontSize: 18),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: controller.supportedLanguages.length,
+                  itemBuilder: (context, index) {
+                    final lang = controller.supportedLanguages[index];
+                    return ListTile(
+                      title: Text(lang['name']!),
+                      onTap: () {
+                        if (isSource) {
+                          controller.selectSourceLanguage(
+                              lang['code']!, lang['name']!);
+                        } else {
+                          controller.selectTargetLanguage(
+                              lang['code']!, lang['name']!);
+                        }
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetBuilder<TranslationController>(
@@ -108,19 +151,19 @@ class _TranslationScreenState extends State<TranslationScreen>
                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Text(
-                                'English',
-                                style: AppTextStyles.button.copyWith(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14),
-                              ),
+                              child: Obx(() => Text(
+                                    controller.selectedSourceLanguageName.value,
+                                    style: AppTextStyles.button.copyWith(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                  )),
                             ),
                           ),
                           IconButton(
                             icon: Icon(Icons.arrow_drop_down,
                                 color: Color(0xFF003049)),
-                            onPressed: () {},
+                            onPressed: () => _showLanguagePicker(true),
                           ),
                         ],
                       ),
@@ -143,7 +186,7 @@ class _TranslationScreenState extends State<TranslationScreen>
                     ),
                     child: IconButton(
                       icon: Icon(Icons.swap_horiz, color: Colors.white),
-                      onPressed: () {},
+                      onPressed: () => controller.swapLanguages(),
                     ),
                   ),
                   SizedBox(width: 10),
@@ -169,19 +212,19 @@ class _TranslationScreenState extends State<TranslationScreen>
                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Text(
-                                'Spanish',
-                                style: AppTextStyles.button.copyWith(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14),
-                              ),
+                              child: Obx(() => Text(
+                                    controller.selectedTargetLanguageName.value,
+                                    style: AppTextStyles.button.copyWith(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                  )),
                             ),
                           ),
                           IconButton(
                             icon: Icon(Icons.arrow_drop_down,
                                 color: Color(0xFF003049)),
-                            onPressed: () {},
+                            onPressed: () => _showLanguagePicker(false),
                           ),
                         ],
                       ),
@@ -230,16 +273,17 @@ class _TranslationScreenState extends State<TranslationScreen>
                                 color: Colors.black.withOpacity(0.2)),
                           ),
                           child: ElevatedButton.icon(
-                            onPressed: controller.isListeningEnglish.value
-                                ? () => controller.stopListeningEnglish()
-                                : () => controller.startListeningEnglish(),
+                            onPressed: controller.isListeningSource.value
+                                ? () => controller.stopListeningSource()
+                                : () => controller.startListeningSource(),
                             icon: Icon(
-                              controller.isListeningEnglish.value
+                              controller.isListeningSource.value
                                   ? Icons.stop
                                   : Icons.mic,
                               color: Colors.white,
                             ),
-                            label: Text('Speak English'),
+                            label: Obx(() => Text(
+                                'Speak ${controller.selectedSourceLanguageName.value}')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xFF003049),
                               shadowColor: Colors.transparent,
@@ -267,16 +311,17 @@ class _TranslationScreenState extends State<TranslationScreen>
                                 color: Colors.black.withOpacity(0.2)),
                           ),
                           child: ElevatedButton.icon(
-                            onPressed: controller.isListeningSpanish.value
-                                ? () => controller.stopListeningSpanish()
-                                : () => controller.startListeningSpanish(),
+                            onPressed: controller.isListeningTarget.value
+                                ? () => controller.stopListeningTarget()
+                                : () => controller.startListeningTarget(),
                             icon: Icon(
-                              controller.isListeningSpanish.value
+                              controller.isListeningTarget.value
                                   ? Icons.stop
                                   : Icons.mic,
                               color: Colors.white,
                             ),
-                            label: Text('Speak Spanish'),
+                            label: Obx(() => Text(
+                                'Speak ${controller.selectedTargetLanguageName.value}')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xFF003049),
                               shadowColor: Colors.transparent,
