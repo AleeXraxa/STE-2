@@ -336,10 +336,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     mainAxisSpacing: 10,
                     children: [
                       _buildTranslateButton('Free Talk (Dual Ear)', Icons.mic,
-                          () {
-                        Get.snackbar(
-                            'Coming Soon', 'Free Talk feature coming soon');
-                      }),
+                          () => Get.toNamed('/free_talk')),
                       _buildTranslateButton(
                           'Translation Machine', Icons.translate, () {
                         Get.toNamed('/translation');
