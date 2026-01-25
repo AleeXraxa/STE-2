@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/colors.dart';
 import '../controllers/assistant_controller.dart';
 import '../models/chat_message.dart';
 

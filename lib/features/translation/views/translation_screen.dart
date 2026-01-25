@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/translation_controller.dart';
-import '../models/message.dart';
 import 'chat_bubble.dart';
-import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 
 class TranslationScreen extends StatefulWidget {
