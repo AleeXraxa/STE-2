@@ -18,9 +18,10 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isEnglish = message.sourceLang == 'en';
+    bool isSourceLanguage =
+        message.sourceLang == controller.selectedSourceLanguage.value;
     return Align(
-      alignment: isEnglish ? Alignment.topLeft : Alignment.topRight,
+      alignment: isSourceLanguage ? Alignment.topLeft : Alignment.topRight,
       child: GestureDetector(
         onTap: () {
           // Add interactive feedback
@@ -38,7 +39,7 @@ class ChatBubble extends StatelessWidget {
           constraints:
               BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
           decoration: BoxDecoration(
-            color: isEnglish ? Color(0xFF003049) : Colors.grey[300],
+            color: isSourceLanguage ? Color(0xFF003049) : Colors.grey[300],
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
@@ -55,7 +56,7 @@ class ChatBubble extends StatelessWidget {
               Text(
                 message.original,
                 style: AppTextStyles.body.copyWith(
-                    color: isEnglish ? Colors.white : Colors.black,
+                    color: isSourceLanguage ? Colors.white : Colors.black,
                     fontWeight: FontWeight.w500),
               ),
               SizedBox(height: 8),
@@ -65,7 +66,7 @@ class ChatBubble extends StatelessWidget {
                     child: Text(
                       message.translated,
                       style: AppTextStyles.body.copyWith(
-                          color: isEnglish ? Colors.white : Colors.black,
+                          color: isSourceLanguage ? Colors.white : Colors.black,
                           fontStyle: FontStyle.italic),
                     ),
                   ),
@@ -81,7 +82,8 @@ class ChatBubble extends StatelessWidget {
                             controller.playingIndex.value == index
                                 ? Icons.stop
                                 : Icons.play_arrow,
-                            color: isEnglish ? Colors.white : Colors.black,
+                            color:
+                                isSourceLanguage ? Colors.white : Colors.black,
                             size: 20,
                           ),
                           onPressed: () => controller.play(index),
