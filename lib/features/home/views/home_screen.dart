@@ -32,6 +32,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.initState();
     Get.put(BluetoothService());
     _initializeAnimations();
+    // Check for connected devices when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final bluetoothService = Get.find<BluetoothService>();
+      bluetoothService.checkConnectedDevices();
+    });
   }
 
   void _initializeAnimations() {
@@ -160,7 +165,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   position: _connectSlideAnimation,
                   child: Obx(() {
                     final bluetoothService = Get.find<BluetoothService>();
-                    if (bluetoothService.connectedDeviceName.value.isEmpty) {
+                    if (bluetoothService.isConnecting.value) {
+                      return Column(
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF003049)),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            'Connecting...',
+                            style: AppTextStyles.body.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black),
+                          ),
+                        ],
+                      );
+                    } else if (bluetoothService
+                        .connectedDeviceName.value.isEmpty) {
                       return Column(
                         children: [
                           Container(

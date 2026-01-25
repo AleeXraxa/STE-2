@@ -1,16 +1,11 @@
-import 'package:flutter_blue_plus/flutter_blue_plus.dart'
-    show
-        FlutterBluePlus,
-        BluetoothDevice,
-        ScanResult,
-        BluetoothAdapterState,
-        BluetoothConnectionState;
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:app_settings/app_settings.dart';
 
 class BluetoothService extends GetxController {
   var isScanning = false.obs;
+  var isConnecting = false.obs;
   var devices = <BluetoothDevice>[].obs;
   var connectedDevice = Rx<BluetoothDevice?>(null);
   var connectedDeviceName = ''.obs;
@@ -27,43 +22,94 @@ class BluetoothService extends GetxController {
         connectedDevice.value = null;
         connectedDeviceName.value = '';
         print('DEBUG: Cleared connected device due to Bluetooth off');
+      } else if (state == BluetoothAdapterState.on) {
+        // Bluetooth turned on, check for connected devices
+        checkConnectedDevices();
       }
-      // Don't automatically show devices when Bluetooth turns on
     });
+
+    // Initial check for connected devices
+    checkConnectedDevices();
   }
 
   Future<void> checkConnectedDevices() async {
     try {
-      // For classic Bluetooth devices, flutter_blue_plus can't detect system connections
-      // So we check if Bluetooth is on and show bonded devices as "connected"
       var adapterState = await FlutterBluePlus.adapterState.first;
       print('DEBUG: Bluetooth adapter state: $adapterState');
 
       if (adapterState == BluetoothAdapterState.on) {
-        var bonded = await FlutterBluePlus.bondedDevices;
-        print('DEBUG: Found ${bonded.length} bonded devices');
+        // First check for BLE devices connected by this app
+        var connected = await FlutterBluePlus.connectedDevices;
+        print('DEBUG: Found ${connected.length} BLE connected devices');
 
-        if (bonded.isNotEmpty) {
-          // Find the device with "MB-H2" or similar in name, or take the first
-          var targetDevice = bonded.firstWhere(
-            (d) =>
-                d.platformName.contains('MB-H2') ||
-                d.platformName.contains('Morui'),
-            orElse: () => bonded.first,
-          );
-
+        if (connected.isNotEmpty) {
+          // Take the first BLE connected device
+          var targetDevice = connected.first;
           connectedDevice.value = targetDevice;
           connectedDeviceName.value = targetDevice.platformName.isNotEmpty
               ? targetDevice.platformName
-              : targetDevice.localName?.isNotEmpty == true
-                  ? targetDevice.localName!
-                  : 'Connected Device';
+              : targetDevice.remoteId.toString();
           print(
-              'DEBUG: Showing bonded device as connected: ${connectedDeviceName.value}');
+              'DEBUG: Found BLE connected device: ${connectedDeviceName.value}');
+
+          // Set up connection state listener
+          targetDevice.connectionState.listen((state) {
+            print('DEBUG: Connection state changed to: $state');
+            if (state == BluetoothConnectionState.disconnected) {
+              connectedDevice.value = null;
+              connectedDeviceName.value = '';
+              Get.snackbar('Disconnected', 'Device disconnected');
+              // Re-check devices after disconnection
+              checkConnectedDevices();
+            }
+          });
         } else {
-          connectedDevice.value = null;
-          connectedDeviceName.value = '';
-          print('DEBUG: No bonded devices found');
+          // Check bonded devices and see if any are actually connected
+          var bonded = await FlutterBluePlus.bondedDevices;
+          print('DEBUG: Found ${bonded.length} bonded devices');
+
+          // Since flutter_blue_plus can't reliably detect classic Bluetooth connections,
+          // show known earbuds devices as connected if they are bonded
+          // Prioritize STE 001, then MB-H2/Morui devices
+          BluetoothDevice? targetDevice;
+
+          // First, look for STE 001
+          for (var device in bonded) {
+            if (device.platformName == 'STE 001') {
+              targetDevice = device;
+              break;
+            }
+          }
+
+          // If not found, look for MB-H2 or Morui
+          if (targetDevice == null) {
+            for (var device in bonded) {
+              if (device.platformName.contains('MB-H2') ||
+                  device.platformName.contains('Morui')) {
+                targetDevice = device;
+                break;
+              }
+            }
+          }
+
+          if (targetDevice != null) {
+            connectedDevice.value = targetDevice;
+            connectedDeviceName.value = targetDevice.platformName;
+            print(
+                'DEBUG: Showing known earbuds device as connected: ${connectedDeviceName.value}');
+          } else if (bonded.isNotEmpty) {
+            // If no known devices found, show the first bonded device as potentially connected
+            // This allows new devices to be detected after system connection
+            var firstDevice = bonded.first;
+            connectedDevice.value = firstDevice;
+            connectedDeviceName.value = firstDevice.platformName;
+            print(
+                'DEBUG: Showing first bonded device as connected: ${connectedDeviceName.value}');
+          }
+
+          if (connectedDevice.value == null) {
+            print('DEBUG: No connected devices found');
+          }
         }
       } else {
         connectedDevice.value = null;
@@ -120,13 +166,33 @@ class BluetoothService extends GetxController {
 
   Future<void> connectToDevice(BluetoothDevice device) async {
     try {
-      // For demo, simulate connection
+      isConnecting.value = true;
+      await device.connect();
       connectedDevice.value = device;
       connectedDeviceName.value = device.platformName.isNotEmpty
           ? device.platformName
-          : 'Unknown Device';
+          : device.remoteId.toString();
       Get.snackbar('Connected', 'Connected to ${connectedDeviceName.value}');
+      isConnecting.value = false;
+
+      // Listen to connection state changes
+      device.connectionState.listen((state) {
+        print('DEBUG: Connection state changed to: $state');
+        if (state == BluetoothConnectionState.disconnected) {
+          connectedDevice.value = null;
+          connectedDeviceName.value = '';
+          isConnecting.value = false;
+          Get.snackbar('Disconnected', 'Device disconnected');
+          // Auto-reconnect attempt
+          Future.delayed(Duration(seconds: 2), () {
+            if (connectedDevice.value == null) {
+              connectToDevice(device);
+            }
+          });
+        }
+      });
     } catch (e) {
+      isConnecting.value = false;
       Get.snackbar('Error', 'Failed to connect: $e');
     }
   }
