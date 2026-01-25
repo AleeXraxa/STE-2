@@ -220,8 +220,8 @@ class _TranslationScreenState extends State<TranslationScreen>
           backgroundColor: Color(0xFFEDF2F4),
           actions: [
             IconButton(
-              icon: Icon(Icons.edit, color: Color(0xFF003049)),
-              onPressed: () {},
+              icon: Icon(Icons.checklist, color: Color(0xFF003049)),
+              onPressed: () => controller.isSelectionMode.toggle(),
             )
           ],
         ),
@@ -372,128 +372,228 @@ class _TranslationScreenState extends State<TranslationScreen>
               ),
             ),
 
-            /// ✅ Bottom Voice Buttons
+            /// ✅ Bottom Buttons
             FadeTransition(
               opacity: _bottomFadeAnimation,
               child: Container(
                 padding: EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Obx(
-                        () => Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: controller.isListeningTarget.value
-                                ? Colors.grey[300]
-                                : Color(0xFFEDF2F4),
-                            borderRadius: BorderRadius.circular(25),
-                            border: Border.all(
-                                color: controller.isListeningTarget.value
-                                    ? Colors.grey[400]!
-                                    : Colors.black.withOpacity(0.2)),
+                child: Obx(() => controller.isSelectionMode.value
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: Obx(() => Container(
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        controller.selectedMessages.isNotEmpty
+                                            ? Color(0xFFEDF2F4)
+                                            : Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(25),
+                                    border: Border.all(
+                                        color: controller
+                                                .selectedMessages.isNotEmpty
+                                            ? Colors.black.withOpacity(0.2)
+                                            : Colors.grey[400]!),
+                                  ),
+                                  child: ElevatedButton.icon(
+                                    onPressed: controller
+                                            .selectedMessages.isNotEmpty
+                                        ? () {
+                                            controller.deleteSelectedMessages();
+                                            controller.isSelectionMode.value =
+                                                false;
+                                          }
+                                        : null,
+                                    icon: Icon(Icons.delete,
+                                        color: controller
+                                                .selectedMessages.isNotEmpty
+                                            ? Colors.white
+                                            : Colors.grey[500]),
+                                    label: Text('Delete'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          controller.selectedMessages.isNotEmpty
+                                              ? Colors.red
+                                              : Colors.grey[400],
+                                      shadowColor: Colors.transparent,
+                                      foregroundColor:
+                                          controller.selectedMessages.isNotEmpty
+                                              ? Colors.white
+                                              : Colors.grey[500],
+                                      textStyle: AppTextStyles.button.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                    ),
+                                  ),
+                                )),
                           ),
-                          child: ElevatedButton.icon(
-                            onPressed: controller.isListeningTarget.value
-                                ? null
-                                : (controller.isListeningSource.value
-                                    ? () => controller.stopListeningSource()
-                                    : () => controller.startListeningSource()),
-                            icon: Icon(
-                              controller.isListeningSource.value
-                                  ? Icons.stop
-                                  : Icons.mic,
-                              color: controller.isListeningTarget.value
-                                  ? Colors.grey[500]
-                                  : Colors.white,
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Container(
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFEDF2F4),
+                                borderRadius: BorderRadius.circular(25),
+                                border: Border.all(
+                                    color: Colors.black.withOpacity(0.2)),
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  controller.isSelectionMode.value = false;
+                                  controller.selectedMessages.clear();
+                                },
+                                icon: Icon(Icons.cancel, color: Colors.white),
+                                label: Text('Cancel'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFF003049),
+                                  shadowColor: Colors.transparent,
+                                  foregroundColor: Colors.white,
+                                  textStyle: AppTextStyles.button.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14),
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 16.0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                ),
+                              ),
                             ),
-                            label: Obx(() => Text(
-                                'Speak ${controller.selectedSourceLanguageName.value}',
-                                style: TextStyle(
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Obx(
+                              () => Container(
+                                height: 50,
+                                decoration: BoxDecoration(
                                   color: controller.isListeningTarget.value
-                                      ? Colors.grey[500]
-                                      : Colors.white,
-                                ))),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  controller.isListeningTarget.value
-                                      ? Colors.grey[400]
-                                      : Color(0xFF003049),
-                              shadowColor: Colors.transparent,
-                              foregroundColor:
-                                  controller.isListeningTarget.value
-                                      ? Colors.grey[500]
-                                      : Colors.white,
-                              textStyle: AppTextStyles.button.copyWith(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
-                              padding: EdgeInsets.symmetric(horizontal: 16.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
+                                      ? Colors.grey[300]
+                                      : Color(0xFFEDF2F4),
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                      color: controller.isListeningTarget.value
+                                          ? Colors.grey[400]!
+                                          : Colors.black.withOpacity(0.2)),
+                                ),
+                                child: ElevatedButton.icon(
+                                  onPressed: controller.isListeningTarget.value
+                                      ? null
+                                      : (controller.isListeningSource.value
+                                          ? () =>
+                                              controller.stopListeningSource()
+                                          : () => controller
+                                              .startListeningSource()),
+                                  icon: Icon(
+                                    controller.isListeningSource.value
+                                        ? Icons.stop
+                                        : Icons.mic,
+                                    color: controller.isListeningTarget.value
+                                        ? Colors.grey[500]
+                                        : Colors.white,
+                                  ),
+                                  label: Obx(() => Text(
+                                      'Speak ${controller.selectedSourceLanguageName.value}',
+                                      style: TextStyle(
+                                        color:
+                                            controller.isListeningTarget.value
+                                                ? Colors.grey[500]
+                                                : Colors.white,
+                                      ))),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        controller.isListeningTarget.value
+                                            ? Colors.grey[400]
+                                            : Color(0xFF003049),
+                                    shadowColor: Colors.transparent,
+                                    foregroundColor:
+                                        controller.isListeningTarget.value
+                                            ? Colors.grey[500]
+                                            : Colors.white,
+                                    textStyle: AppTextStyles.button.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 16.0),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Obx(
-                        () => Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: controller.isListeningSource.value
-                                ? Colors.grey[300]
-                                : Color(0xFFEDF2F4),
-                            borderRadius: BorderRadius.circular(25),
-                            border: Border.all(
-                                color: controller.isListeningSource.value
-                                    ? Colors.grey[400]!
-                                    : Colors.black.withOpacity(0.2)),
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: controller.isListeningSource.value
-                                ? null
-                                : (controller.isListeningTarget.value
-                                    ? () => controller.stopListeningTarget()
-                                    : () => controller.startListeningTarget()),
-                            icon: Icon(
-                              controller.isListeningTarget.value
-                                  ? Icons.stop
-                                  : Icons.mic,
-                              color: controller.isListeningSource.value
-                                  ? Colors.grey[500]
-                                  : Colors.white,
-                            ),
-                            label: Obx(() => Text(
-                                'Speak ${controller.selectedTargetLanguageName.value}',
-                                style: TextStyle(
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Obx(
+                              () => Container(
+                                height: 50,
+                                decoration: BoxDecoration(
                                   color: controller.isListeningSource.value
-                                      ? Colors.grey[500]
-                                      : Colors.white,
-                                ))),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  controller.isListeningSource.value
-                                      ? Colors.grey[400]
-                                      : Color(0xFF003049),
-                              shadowColor: Colors.transparent,
-                              foregroundColor:
-                                  controller.isListeningSource.value
-                                      ? Colors.grey[500]
-                                      : Colors.white,
-                              textStyle: AppTextStyles.button.copyWith(
-                                  fontWeight: FontWeight.bold, fontSize: 14),
-                              padding: EdgeInsets.symmetric(horizontal: 16.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
+                                      ? Colors.grey[300]
+                                      : Color(0xFFEDF2F4),
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                      color: controller.isListeningSource.value
+                                          ? Colors.grey[400]!
+                                          : Colors.black.withOpacity(0.2)),
+                                ),
+                                child: ElevatedButton.icon(
+                                  onPressed: controller.isListeningSource.value
+                                      ? null
+                                      : (controller.isListeningTarget.value
+                                          ? () =>
+                                              controller.stopListeningTarget()
+                                          : () => controller
+                                              .startListeningTarget()),
+                                  icon: Icon(
+                                    controller.isListeningTarget.value
+                                        ? Icons.stop
+                                        : Icons.mic,
+                                    color: controller.isListeningSource.value
+                                        ? Colors.grey[500]
+                                        : Colors.white,
+                                  ),
+                                  label: Obx(() => Text(
+                                      'Speak ${controller.selectedTargetLanguageName.value}',
+                                      style: TextStyle(
+                                        color:
+                                            controller.isListeningSource.value
+                                                ? Colors.grey[500]
+                                                : Colors.white,
+                                      ))),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        controller.isListeningSource.value
+                                            ? Colors.grey[400]
+                                            : Color(0xFF003049),
+                                    shadowColor: Colors.transparent,
+                                    foregroundColor:
+                                        controller.isListeningSource.value
+                                            ? Colors.grey[500]
+                                            : Colors.white,
+                                    textStyle: AppTextStyles.button.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 16.0),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                        ],
+                      )),
               ),
             ),
           ],

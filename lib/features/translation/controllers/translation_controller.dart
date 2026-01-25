@@ -20,6 +20,8 @@ class TranslationController extends GetxController {
   var isListeningTarget = false.obs;
   var chatMessages = <Message>[].obs;
   var playingIndex = (-1).obs;
+  var isSelectionMode = false.obs;
+  var selectedMessages = <int>{}.obs;
 
   // Search functionality
   var searchQuery = ''.obs;
@@ -316,5 +318,17 @@ class TranslationController extends GetxController {
   Future<void> stopPlaying() async {
     await tts.stop();
     playingIndex.value = -1;
+  }
+
+  void deleteSelectedMessages() {
+    // Sort indices in descending order to remove from end
+    final indices = selectedMessages.toList()..sort((a, b) => b.compareTo(a));
+    for (final index in indices) {
+      if (index < chatMessages.length) {
+        chatMessages.removeAt(index);
+      }
+    }
+    selectedMessages.clear();
+    update();
   }
 }

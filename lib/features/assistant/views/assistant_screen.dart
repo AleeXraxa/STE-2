@@ -11,8 +11,6 @@ class AssistantScreen extends StatefulWidget {
 
 class _AssistantScreenState extends State<AssistantScreen>
     with TickerProviderStateMixin {
-  final String selectedLanguage =
-      'English'; // Placeholder, can be dynamic later
   bool showKeyboardFirst = false;
   bool hasText = false;
   final TextEditingController _textController = TextEditingController();
@@ -76,6 +74,136 @@ class _AssistantScreenState extends State<AssistantScreen>
     super.dispose();
   }
 
+  void _showLanguagePicker() {
+    // Reset search when opening picker
+    controller.updateSearchQuery('');
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: BoxDecoration(
+            color: Color(0xFFEDF2F4),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20.0),
+                decoration: BoxDecoration(
+                  color: Color(0xFF003049),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Select Language',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Search Bar
+                    Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        onChanged: (value) =>
+                            controller.updateSearchQuery(value),
+                        decoration: InputDecoration(
+                          hintText: 'Search languages...',
+                          hintStyle: TextStyle(color: Colors.grey[600]),
+                          prefixIcon:
+                              Icon(Icons.search, color: Color(0xFF003049)),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 15),
+                        ),
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Language List
+              Expanded(
+                child: Obx(() => ListView.builder(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      itemCount: controller.filteredLanguages.length,
+                      itemBuilder: (context, index) {
+                        final lang = controller.filteredLanguages[index];
+                        return Container(
+                          margin:
+                              EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              lang['name']!,
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ),
+                            subtitle: Text(
+                              lang['code']!,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            trailing: Icon(
+                              Icons.chevron_right,
+                              color: Color(0xFF003049),
+                            ),
+                            onTap: () {
+                              controller.selectLanguage(
+                                  lang['code']!, lang['name']!);
+                              Navigator.pop(context);
+                            },
+                          ),
+                        );
+                      },
+                    )),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,19 +216,32 @@ class _AssistantScreenState extends State<AssistantScreen>
           onPressed: () => Get.back(),
         ),
         actions: [
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 8),
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Color(0xFF003049),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              selectedLanguage,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+          GestureDetector(
+            onTap: () => _showLanguagePicker(),
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 8),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Color(0xFF003049),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Obx(() => Text(
+                        controller.selectedLanguageName.value,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )),
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ],
               ),
             ),
           ),
