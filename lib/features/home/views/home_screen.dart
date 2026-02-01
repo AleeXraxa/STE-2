@@ -347,8 +347,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             'Headphone & Phone feature coming soon');
                       }),
                       _buildTranslateButton('Voice Notes', Icons.note, () {
-                        Get.snackbar(
-                            'Coming Soon', 'Voice Notes feature coming soon');
+                        Get.toNamed('/voice_notes');
                       }),
                       _buildTranslateButton('Photo Translation', Icons.photo,
                           () {
