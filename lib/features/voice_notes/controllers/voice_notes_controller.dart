@@ -18,6 +18,7 @@ class VoiceNotesController extends GetxController {
   RxInt recordingDuration = 0.obs;
   RxInt currentPlayingIndex = (-1).obs;
   RxList<VoiceNote> voiceNotes = <VoiceNote>[].obs;
+  RxString realTimeTranscription = ''.obs;
 
   // Current recording state
   String? _currentFilePath;
@@ -78,21 +79,56 @@ class VoiceNotesController extends GetxController {
     isRecording.value = true;
     recordingDuration.value = 0;
     _recordingStartTime = DateTime.now().millisecondsSinceEpoch;
+    realTimeTranscription.value = '';
 
-    // Start recording with transcription
-    await _speechToText.listen(
-      listenMode: ListenMode.dictation,
-      partialResults: true,
-      onResult: (result) {
-        // We'll handle transcription later if needed
-        if (result.finalResult) {
-          print('Recorded text: ${result.recognizedWords}');
+    // Initialize speech-to-text with proper status handling
+    await _speechToText.initialize(
+      onStatus: (status) {
+        print('Speech status: $status');
+        if (status == 'notListening' || status == 'done') {
+          if (isRecording.value) {
+            // If still recording, restart listening
+            _restartListening();
+          }
+        }
+      },
+      onError: (error) {
+        print('Speech error: $error');
+        if (error.errorMsg == 'error_speech_timeout') {
+          // Restart listening on timeout
+          _restartListening();
+        } else {
+          Get.snackbar('Error', 'Speech recognition error: ${error.errorMsg}');
         }
       },
     );
 
+    // Start recording with real-time transcription
+    await _restartListening();
+
     // Start duration timer
     _startDurationTimer();
+  }
+
+  Future<void> _restartListening() async {
+    try {
+      await _speechToText.listen(
+        listenMode: ListenMode.confirmation,
+        partialResults: true,
+        listenFor: Duration(hours: 1), // Long duration to avoid timeout
+        pauseFor: Duration(hours: 1), // Long pause to avoid timeout
+        onResult: (result) {
+          if (result.finalResult) {
+            print('Recorded text: ${result.recognizedWords}');
+          } else {
+            // Update real-time transcription with partial results
+            realTimeTranscription.value = result.recognizedWords;
+          }
+        },
+      );
+    } catch (e) {
+      print('Error restarting listening: $e');
+    }
   }
 
   void _startDurationTimer() {
@@ -107,6 +143,7 @@ class VoiceNotesController extends GetxController {
   Future<void> stopRecording() async {
     isRecording.value = false;
     await _speechToText.stop();
+    await _speechToText.cancel(); // Ensure all listening is stopped
 
     // Create a new voice note
     final id = DateTime.now().millisecondsSinceEpoch.toString();
@@ -131,6 +168,7 @@ class VoiceNotesController extends GetxController {
     }
 
     recordingDuration.value = 0;
+    realTimeTranscription.value = ''; // Clear transcription
   }
 
   Future<void> playVoiceNote(int index) async {
