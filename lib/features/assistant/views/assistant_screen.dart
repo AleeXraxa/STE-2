@@ -341,7 +341,8 @@ class _AssistantScreenState extends State<AssistantScreen>
     return ListView.builder(
       itemCount: controller.chatMessages.length +
           (controller.isListening.value ? 1 : 0) +
-          (controller.isLoading.value ? 1 : 0),
+          (controller.isLoading.value ? 1 : 0) +
+          (controller.errorMessage.value.isNotEmpty ? 1 : 0),
       itemBuilder: (context, index) {
         if (index < controller.chatMessages.length) {
           return _buildMessageBubble(controller.chatMessages[index],
@@ -350,8 +351,13 @@ class _AssistantScreenState extends State<AssistantScreen>
             index == controller.chatMessages.length) {
           return _buildMessageBubble(controller.livePartialText.value,
               isPartial: true);
-        } else if (controller.isLoading.value) {
+        } else if (controller.isLoading.value &&
+            index ==
+                controller.chatMessages.length +
+                    (controller.isListening.value ? 1 : 0)) {
           return _buildLoadingBubble();
+        } else if (controller.errorMessage.value.isNotEmpty) {
+          return _buildErrorBubble(controller.errorMessage.value);
         }
         return SizedBox.shrink();
       },
@@ -477,6 +483,50 @@ class _AssistantScreenState extends State<AssistantScreen>
     );
   }
 
+  Widget _buildErrorBubble(String message) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red[100],
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(16),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                message,
+                style: GoogleFonts.montserrat(
+                  color: Colors.red[900],
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+            TextButton(
+              onPressed: controller.retryLast,
+              child: Text(
+                'Retry',
+                style: GoogleFonts.montserrat(
+                  color: Colors.red[900],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottomSection() {
     return FadeTransition(
         opacity: _bottomFadeAnimation,
@@ -539,8 +589,10 @@ class _AssistantScreenState extends State<AssistantScreen>
                       child: GestureDetector(
                         onTap: hasText
                             ? () {
-                                controller
-                                    .sendTypedMessage(_textController.text);
+                                if (!controller.isLoading.value) {
+                                  controller
+                                      .sendTypedMessage(_textController.text);
+                                }
                                 _textController.clear();
                                 setState(() => hasText = false);
                               }
@@ -569,9 +621,11 @@ class _AssistantScreenState extends State<AssistantScreen>
                     Expanded(
                       flex: 5,
                       child: Obx(() => GestureDetector(
-                            onTap: controller.isListening.value
-                                ? controller.stopListening
-                                : controller.startListening,
+                            onTap: controller.isLoading.value
+                                ? null
+                                : (controller.isListening.value
+                                    ? controller.stopListening
+                                    : controller.startListening),
                             child: Container(
                               height: 50,
                               padding: EdgeInsets.symmetric(horizontal: 10),

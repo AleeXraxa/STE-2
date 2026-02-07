@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/text_styles.dart';
 import '../controllers/photo_translation_controller.dart';
+import 'language_picker_sheet.dart';
+import '../../../core/services/permission_service.dart';
 
 class PhotoScanScreen extends StatefulWidget {
   const PhotoScanScreen({super.key});
@@ -33,6 +35,14 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
   }
 
   Future<void> _initCamera() async {
+    final granted = await PermissionService.requestCamera();
+    if (!granted) {
+      if (mounted) {
+        Get.snackbar('Permission', 'Camera permission is required');
+        Get.back();
+      }
+      return;
+    }
     final cameras = await availableCameras();
     final back = cameras.firstWhere(
       (c) => c.lensDirection == CameraLensDirection.back,
@@ -146,7 +156,7 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
                       ),
                     ),
                     const SizedBox(width: 10),
-                    _buildTargetDropdown(),
+                    _buildTargetSelector(context),
                   ],
                 );
               }),
@@ -157,33 +167,27 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
     );
   }
 
-  Widget _buildTargetDropdown() {
-    return DropdownButtonHideUnderline(
-      child: DropdownButton<String>(
-        value: controller.selectedTargetLanguage.value,
-        items: controller.supportedLanguages
-            .map(
-              (lang) => DropdownMenuItem<String>(
-                value: lang['code'],
-                child: Text(
-                  lang['name']!,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            )
-            .toList(),
-        onChanged: (code) {
-          if (code == null) return;
-          final name = controller.supportedLanguages
-              .firstWhere((l) => l['code'] == code)['name']!;
-          controller.selectTargetLanguage(code, name);
-        },
-        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-        dropdownColor: Colors.black87,
+  Widget _buildTargetSelector(BuildContext context) {
+    return InkWell(
+      onTap: () => showLanguagePickerSheet(
+        context: context,
+        languages: controller.supportedLanguages,
+        selectedCode: controller.selectedTargetLanguage.value,
+        onSelected: controller.selectTargetLanguage,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            controller.selectedTargetLanguageName.value,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down, color: Colors.white),
+        ],
       ),
     );
   }

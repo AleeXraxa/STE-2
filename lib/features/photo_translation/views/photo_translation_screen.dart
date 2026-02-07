@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/text_styles.dart';
 import '../controllers/photo_translation_controller.dart';
 import 'photo_scan_screen.dart';
+import 'language_picker_sheet.dart';
 
 class PhotoTranslationScreen extends StatelessWidget {
   PhotoTranslationScreen({super.key});
@@ -47,7 +48,7 @@ class PhotoTranslationScreen extends StatelessWidget {
 
           return Column(
             children: [
-              _buildLanguageBar(),
+              _buildLanguageBar(context),
               const SizedBox(height: 12),
               if (isProcessing) ...[
                 const CircularProgressIndicator(
@@ -194,7 +195,7 @@ class PhotoTranslationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLanguageBar() {
+  Widget _buildLanguageBar(BuildContext context) {
     return Obx(() {
       final detected = controller.detectedLanguageName.value;
       final target = controller.selectedTargetLanguageName.value;
@@ -226,40 +227,34 @@ class PhotoTranslationScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            _buildTargetDropdown(target),
+            _buildTargetSelector(context, target),
           ],
         ),
       );
     });
   }
 
-  Widget _buildTargetDropdown(String currentName) {
-    return DropdownButtonHideUnderline(
-      child: DropdownButton<String>(
-        value: controller.selectedTargetLanguage.value,
-        items: controller.supportedLanguages
-            .map(
-              (lang) => DropdownMenuItem<String>(
-                value: lang['code'],
-                child: Text(
-                  lang['name']!,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: const Color(0xFF003049),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            )
-            .toList(),
-        onChanged: (code) {
-          if (code == null) return;
-          final name = controller.supportedLanguages
-              .firstWhere((l) => l['code'] == code)['name']!;
-          controller.selectTargetLanguage(code, name);
-        },
-        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF003049)),
-        dropdownColor: Colors.white,
+  Widget _buildTargetSelector(BuildContext context, String currentName) {
+    return InkWell(
+      onTap: () => showLanguagePickerSheet(
+        context: context,
+        languages: controller.supportedLanguages,
+        selectedCode: controller.selectedTargetLanguage.value,
+        onSelected: controller.selectTargetLanguage,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            currentName,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: const Color(0xFF003049),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down, color: Color(0xFF003049)),
+        ],
       ),
     );
   }

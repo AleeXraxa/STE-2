@@ -8,7 +8,8 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _animationController;
 
   // Connect area animations
@@ -31,10 +32,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     Get.put(BluetoothService());
+    WidgetsBinding.instance.addObserver(this);
     _initializeAnimations();
     // Check for connected devices when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bluetoothService = Get.find<BluetoothService>();
+      bluetoothService.startConnectedDevicePolling();
       bluetoothService.checkConnectedDevices();
     });
   }
@@ -128,8 +131,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    final bluetoothService = Get.find<BluetoothService>();
+    bluetoothService.stopConnectedDevicePolling();
+    WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final bluetoothService = Get.find<BluetoothService>();
+    if (state == AppLifecycleState.resumed) {
+      bluetoothService.startConnectedDevicePolling();
+      bluetoothService.checkConnectedDevices();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      bluetoothService.stopConnectedDevicePolling();
+    }
   }
 
   @override

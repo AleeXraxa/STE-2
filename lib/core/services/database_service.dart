@@ -25,11 +25,6 @@ class DatabaseService {
       path,
       version: 2,
       onCreate: _createDatabase,
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await db.execute('ALTER TABLE voice_notes ADD COLUMN transcript TEXT');
-        }
-      },
     );
   }
 
@@ -41,8 +36,7 @@ class DatabaseService {
         file_path TEXT NOT NULL,
         created_at TEXT NOT NULL,
         duration INTEGER NOT NULL DEFAULT 0,
-        is_playing INTEGER NOT NULL DEFAULT 0,
-        transcript TEXT
+        is_playing INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -58,7 +52,6 @@ class DatabaseService {
         'created_at': voiceNote.createdAt.toIso8601String(),
         'duration': voiceNote.duration,
         'is_playing': voiceNote.isPlaying ? 1 : 0,
-        'transcript': voiceNote.transcript,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -76,7 +69,6 @@ class DatabaseService {
         createdAt: DateTime.parse(maps[i]['created_at']),
         duration: maps[i]['duration'],
         isPlaying: maps[i]['is_playing'] == 1,
-        transcript: maps[i]['transcript'],
       );
     });
   }
@@ -91,7 +83,6 @@ class DatabaseService {
         'created_at': voiceNote.createdAt.toIso8601String(),
         'duration': voiceNote.duration,
         'is_playing': voiceNote.isPlaying ? 1 : 0,
-        'transcript': voiceNote.transcript,
       },
       where: 'id = ?',
       whereArgs: [voiceNote.id],

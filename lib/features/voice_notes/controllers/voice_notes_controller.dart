@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../../../core/services/database_service.dart';
 import '../models/voice_note.dart';
+import '../../../core/services/permission_service.dart';
 
 class VoiceNotesController extends GetxController {
   final AudioRecorder _recorder = AudioRecorder();
@@ -46,14 +46,10 @@ class VoiceNotesController extends GetxController {
   }
 
   Future<void> requestPermissions() async {
-    // Check and request microphone permission (only required for speech recognition)
-    var microphoneStatus = await Permission.microphone.status;
-    if (!microphoneStatus.isGranted) {
-      microphoneStatus = await Permission.microphone.request();
-      if (!microphoneStatus.isGranted) {
-        Get.snackbar('Permission Denied', 'Microphone permission is required');
-        return;
-      }
+    final granted = await PermissionService.requestMicrophone();
+    if (!granted) {
+      Get.snackbar('Permission Denied', 'Microphone permission is required');
+      return;
     }
 
     // Note: Storage permission is not required for database operations

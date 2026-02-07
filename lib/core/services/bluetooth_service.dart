@@ -1,9 +1,9 @@
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:app_settings/app_settings.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'permission_service.dart';
 
 class BluetoothService extends GetxController {
   var isScanning = false.obs;
@@ -25,12 +25,12 @@ class BluetoothService extends GetxController {
 
     // Listen for Bluetooth adapter state changes
     _adapterSubscription = FlutterBluePlus.adapterState.listen((state) {
-      print('DEBUG: Bluetooth adapter state changed to: $state');
+      
       if (state == BluetoothAdapterState.off) {
         // Bluetooth turned off, clear connected device
         connectedDevice.value = null;
         connectedDeviceName.value = '';
-        print('DEBUG: Cleared connected device due to Bluetooth off');
+        
       } else if (state == BluetoothAdapterState.on) {
         // Bluetooth turned on, check for connected devices
         checkConnectedDevices();
@@ -40,7 +40,7 @@ class BluetoothService extends GetxController {
     // React to actual BLE connection state changes
     _connectionSubscription =
         FlutterBluePlus.events.onConnectionStateChanged.listen((event) {
-      print('DEBUG: Connection state changed to: ${event.connectionState}');
+      
       if (event.connectionState == BluetoothConnectionState.connected) {
         connectedDevice.value = event.device;
         connectedDeviceName.value = event.device.platformName.isNotEmpty
@@ -59,20 +59,19 @@ class BluetoothService extends GetxController {
     });
 
     // Do not infer connections on startup.
-    // We only set connectedDeviceName when a real connection event is observed.
-    _startConnectedDevicePolling();
+    // Start polling only when requested by the UI.
   }
 
   Future<void> checkConnectedDevices() async {
     try {
       var adapterState = await FlutterBluePlus.adapterState.first;
-      print('DEBUG: Bluetooth adapter state: $adapterState');
+      
 
       if (adapterState != BluetoothAdapterState.on) {
         connectedDevice.value = null;
         connectedDeviceName.value = '';
         isClassicConnected.value = false;
-        print('DEBUG: Bluetooth is off');
+        
         return;
       }
 
@@ -101,35 +100,28 @@ class BluetoothService extends GetxController {
             ? device.platformName
             : device.remoteId.toString();
         isClassicConnected.value = false;
-        print(
-            'DEBUG: Found system connected device: ${connectedDeviceName.value}');
+        
       } else {
         final classicName = await _getClassicConnectedDeviceName();
         if (classicName != null && classicName.isNotEmpty) {
           connectedDevice.value = null;
           connectedDeviceName.value = classicName;
           isClassicConnected.value = true;
-          print('DEBUG: Found classic connected device: $classicName');
+          
         } else {
           connectedDevice.value = null;
           connectedDeviceName.value = '';
           isClassicConnected.value = false;
-          print('DEBUG: No connected devices found');
+          
         }
       }
     } catch (e) {
-      print('DEBUG: Error checking devices: $e');
+      
     }
   }
 
   Future<void> requestPermissions() async {
-    await [
-      Permission.bluetooth,
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-      Permission.locationWhenInUse,
-    ].request();
+    await PermissionService.requestBluetooth();
   }
 
   Future<void> startScan() async {
@@ -158,11 +150,11 @@ class BluetoothService extends GetxController {
   }
 
   Future<void> openBluetoothSettings() async {
-    print('DEBUG: Opening Bluetooth settings');
+    
     await AppSettings.openAppSettings(type: AppSettingsType.bluetooth);
     // After opening settings, check for actually connected devices after a delay
     Future.delayed(Duration(seconds: 2), () async {
-      print('DEBUG: Checking for connected devices after settings');
+      
       await checkConnectedDevices();
     });
   }
@@ -203,15 +195,20 @@ class BluetoothService extends GetxController {
           .invokeMethod<String>('getConnectedAudioDeviceName');
       return name;
     } catch (e) {
-      print('DEBUG: Classic BT lookup failed: $e');
+      
       return null;
     }
   }
 
-  void _startConnectedDevicePolling() {
+  void startConnectedDevicePolling() {
     _connectedPollTimer?.cancel();
     _connectedPollTimer =
         Timer.periodic(const Duration(seconds: 3), (_) => checkConnectedDevices());
+  }
+
+  void stopConnectedDevicePolling() {
+    _connectedPollTimer?.cancel();
+    _connectedPollTimer = null;
   }
 
   @override
