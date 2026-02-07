@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/free_talk_controller.dart';
 import 'free_talk_bubble.dart';
 import '../../../core/theme/text_styles.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class FreeTalkScreen extends StatefulWidget {
   @override
@@ -335,13 +336,24 @@ class _FreeTalkScreenState extends State<FreeTalkScreen>
               final messages = controller.messages;
               if (messages.isEmpty) {
                 return Center(
-                  child: Text(
-                    controller.currentStatus.value,
-                    style: AppTextStyles.heading.copyWith(
-                      fontSize: 24,
-                      color: Color(0xFF003049),
-                    ),
-                    textAlign: TextAlign.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (controller.isListening.value)
+                        SpinKitWave(
+                          color: Color(0xFF003049),
+                          size: 36.0,
+                        ),
+                      SizedBox(height: 12),
+                      Text(
+                        controller.currentStatus.value,
+                        style: AppTextStyles.heading.copyWith(
+                          fontSize: 24,
+                          color: Color(0xFF003049),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                 );
               }
