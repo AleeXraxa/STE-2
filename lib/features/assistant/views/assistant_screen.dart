@@ -14,6 +14,7 @@ class _AssistantScreenState extends State<AssistantScreen>
   bool showKeyboardFirst = false;
   bool hasText = false;
   final TextEditingController _textController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   late AssistantController controller;
 
   late AnimationController _animationController;
@@ -71,7 +72,19 @@ class _AssistantScreenState extends State<AssistantScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   void _showLanguagePicker() {
@@ -338,7 +351,9 @@ class _AssistantScreenState extends State<AssistantScreen>
   }
 
   Widget _buildMessages() {
+    _scrollToBottom();
     return ListView.builder(
+      controller: _scrollController,
       itemCount: controller.chatMessages.length +
           (controller.isListening.value ? 1 : 0) +
           (controller.isLoading.value ? 1 : 0) +

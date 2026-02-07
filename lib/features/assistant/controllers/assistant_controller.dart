@@ -22,6 +22,7 @@ class AssistantController extends GetxController {
   String? _lastUserMessage;
   final int _maxMessageLength = 500;
   final Duration _cooldown = const Duration(seconds: 2);
+  bool _speechMessageSent = false;
 
   // Language selection
   var selectedLanguage = 'en'.obs;
@@ -69,10 +70,6 @@ class AssistantController extends GetxController {
       onStatus: (status) {
         if (status == 'notListening') {
           isListening.value = false;
-          if (livePartialText.value.isNotEmpty) {
-            _addUserMessage(livePartialText.value);
-            livePartialText.value = '';
-          }
         }
       },
       onError: (error) {
@@ -96,6 +93,7 @@ class AssistantController extends GetxController {
     }
     if (!isListening.value && _speechToText.isAvailable) {
       livePartialText.value = '';
+      _speechMessageSent = false;
       isListening.value = true;
       final locale = supportedLanguages.firstWhere(
           (lang) => lang['code'] == selectedLanguage.value,
@@ -107,6 +105,8 @@ class AssistantController extends GetxController {
         onResult: (result) {
           livePartialText.value = result.recognizedWords;
           if (result.finalResult && livePartialText.value.isNotEmpty) {
+            if (_speechMessageSent) return;
+            _speechMessageSent = true;
             isListening.value = false;
             _speechToText.stop();
             _addUserMessage(livePartialText.value);
@@ -119,6 +119,15 @@ class AssistantController extends GetxController {
 
   void stopListening() {
     _speechToText.stop();
+    if (livePartialText.value.isNotEmpty) {
+      if (!_speechMessageSent) {
+        _speechMessageSent = true;
+        _addUserMessage(livePartialText.value);
+        livePartialText.value = '';
+      }
+    } else {
+      Get.snackbar('Speech', 'No speech detected');
+    }
   }
 
   void speakText(String text, int index) async {
