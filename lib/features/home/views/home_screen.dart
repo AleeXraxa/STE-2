@@ -351,8 +351,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       }),
                       _buildTranslateButton('Photo Translation', Icons.photo,
                           () {
-                        Get.snackbar('Coming Soon',
-                            'Photo Translation feature coming soon');
+                        Get.toNamed('/photo_translation');
                       }),
                     ],
                   ),

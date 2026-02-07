@@ -4,6 +4,7 @@ import '../features/translation/views/translation_screen.dart';
 import '../features/assistant/views/assistant_screen.dart';
 import '../features/free_talk/views/free_talk_screen.dart';
 import '../features/voice_notes/views/voice_notes_screen.dart';
+import '../features/photo_translation/views/photo_translation_screen.dart';
 import '../splash_screen.dart';
 
 class AppRoutes {
@@ -13,6 +14,7 @@ class AppRoutes {
   static const String assistant = '/assistant';
   static const String freeTalk = '/free_talk';
   static const String voiceNotes = '/voice_notes';
+  static const String photoTranslation = '/photo_translation';
 
   static final List<GetPage> getPages = [
     GetPage(name: splash, page: () => SplashScreen()),
@@ -21,5 +23,6 @@ class AppRoutes {
     GetPage(name: assistant, page: () => AssistantScreen()),
     GetPage(name: freeTalk, page: () => FreeTalkScreen()),
     GetPage(name: voiceNotes, page: () => VoiceNotesScreen()),
+    GetPage(name: photoTranslation, page: () => PhotoTranslationScreen()),
   ];
 }
