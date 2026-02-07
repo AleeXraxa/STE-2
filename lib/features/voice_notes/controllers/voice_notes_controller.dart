@@ -1,16 +1,16 @@
 import 'dart:io';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:app_settings/app_settings.dart';
+import 'package:record/record.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import '../../../core/services/database_service.dart';
 import '../models/voice_note.dart';
 
 class VoiceNotesController extends GetxController {
-  final SpeechToText _speechToText = SpeechToText();
-  final FlutterTts _flutterTts = FlutterTts();
+  final AudioRecorder _recorder = AudioRecorder();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   final DatabaseService _databaseService = DatabaseService();
 
   RxBool isRecording = false.obs;
@@ -18,29 +18,21 @@ class VoiceNotesController extends GetxController {
   RxInt recordingDuration = 0.obs;
   RxInt currentPlayingIndex = (-1).obs;
   RxList<VoiceNote> voiceNotes = <VoiceNote>[].obs;
-  RxString realTimeTranscription = ''.obs;
 
   // Current recording state
   String? _currentFilePath;
-  late int _recordingStartTime;
+  String? _currentRecordingId;
 
   @override
   void onInit() {
     super.onInit();
-    _initializeSpeech();
     _loadVoiceNotes();
-  }
-
-  Future<void> _initializeSpeech() async {
-    await _speechToText.initialize(
-      onStatus: (status) {
-        print('Speech status: $status');
-      },
-      onError: (error) {
-        print('Speech error: $error');
-        Get.snackbar('Error', 'Speech recognition error: ${error.errorMsg}');
-      },
-    );
+    _audioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        currentPlayingIndex.value = -1;
+        isPlaying.value = false;
+      }
+    });
   }
 
   Future<void> _loadVoiceNotes() async {
@@ -71,64 +63,34 @@ class VoiceNotesController extends GetxController {
   Future<void> startRecording() async {
     await requestPermissions();
 
-    if (!_speechToText.isAvailable) {
-      Get.snackbar('Error', 'Speech recognition not available');
+    final hasPermission = await _recorder.hasPermission();
+    if (!hasPermission) {
+      Get.snackbar('Permission Denied', 'Microphone permission is required');
       return;
     }
 
     isRecording.value = true;
     recordingDuration.value = 0;
-    _recordingStartTime = DateTime.now().millisecondsSinceEpoch;
-    realTimeTranscription.value = '';
 
-    // Initialize speech-to-text with proper status handling
-    await _speechToText.initialize(
-      onStatus: (status) {
-        print('Speech status: $status');
-        if (status == 'notListening' || status == 'done') {
-          if (isRecording.value) {
-            // If still recording, restart listening
-            _restartListening();
-          }
-        }
-      },
-      onError: (error) {
-        print('Speech error: $error');
-        if (error.errorMsg == 'error_speech_timeout') {
-          // Restart listening on timeout
-          _restartListening();
-        } else {
-          Get.snackbar('Error', 'Speech recognition error: ${error.errorMsg}');
-        }
-      },
+    _currentRecordingId = DateTime.now().millisecondsSinceEpoch.toString();
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final notesDir = Directory(p.join(documentsDir.path, 'voice_notes'));
+    if (!await notesDir.exists()) {
+      await notesDir.create(recursive: true);
+    }
+    _currentFilePath = p.join(notesDir.path, '${_currentRecordingId!}.wav');
+
+    await _recorder.start(
+      const RecordConfig(
+        encoder: AudioEncoder.wav,
+        bitRate: 128000,
+        sampleRate: 16000,
+      ),
+      path: _currentFilePath!,
     );
-
-    // Start recording with real-time transcription
-    await _restartListening();
 
     // Start duration timer
     _startDurationTimer();
-  }
-
-  Future<void> _restartListening() async {
-    try {
-      await _speechToText.listen(
-        listenMode: ListenMode.confirmation,
-        partialResults: true,
-        listenFor: Duration(hours: 1), // Long duration to avoid timeout
-        pauseFor: Duration(hours: 1), // Long pause to avoid timeout
-        onResult: (result) {
-          if (result.finalResult) {
-            print('Recorded text: ${result.recognizedWords}');
-          } else {
-            // Update real-time transcription with partial results
-            realTimeTranscription.value = result.recognizedWords;
-          }
-        },
-      );
-    } catch (e) {
-      print('Error restarting listening: $e');
-    }
   }
 
   void _startDurationTimer() {
@@ -142,13 +104,16 @@ class VoiceNotesController extends GetxController {
 
   Future<void> stopRecording() async {
     isRecording.value = false;
-    await _speechToText.stop();
-    await _speechToText.cancel(); // Ensure all listening is stopped
+    final recordedPath = await _recorder.stop();
 
     // Create a new voice note
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final id = _currentRecordingId ?? DateTime.now().millisecondsSinceEpoch.toString();
     final title = _formatDateTime(DateTime.now());
-    final filePath = 'voice_notes/$id.wav'; // Placeholder path
+    final filePath = recordedPath ?? _currentFilePath;
+    if (filePath == null) {
+      Get.snackbar('Error', 'Failed to save recording');
+      return;
+    }
 
     final newNote = VoiceNote(
       id: id,
@@ -168,42 +133,42 @@ class VoiceNotesController extends GetxController {
     }
 
     recordingDuration.value = 0;
-    realTimeTranscription.value = ''; // Clear transcription
+    _currentFilePath = null;
+    _currentRecordingId = null;
   }
 
   Future<void> playVoiceNote(int index) async {
     if (currentPlayingIndex.value == index) {
       // Stop current playback
-      await _flutterTts.stop();
+      await _audioPlayer.stop();
       currentPlayingIndex.value = -1;
       isPlaying.value = false;
     } else {
       // Stop any ongoing playback
       if (currentPlayingIndex.value != -1) {
-        await _flutterTts.stop();
+        await _audioPlayer.stop();
       }
 
       currentPlayingIndex.value = index;
       isPlaying.value = true;
 
-      // For demo purposes, we'll just speak the note title
-      // In real implementation, we would play the audio file
       final note = voiceNotes[index];
-      await _flutterTts.speak('Playing voice note: ${note.title}');
+      final file = File(note.filePath);
+      if (!await file.exists()) {
+        Get.snackbar('Error', 'Audio file not found');
+        currentPlayingIndex.value = -1;
+        isPlaying.value = false;
+        return;
+      }
 
-      // Simulate playback duration
-      Future.delayed(Duration(seconds: note.duration), () {
-        if (currentPlayingIndex.value == index) {
-          currentPlayingIndex.value = -1;
-          isPlaying.value = false;
-        }
-      });
+      await _audioPlayer.setFilePath(note.filePath);
+      await _audioPlayer.play();
     }
   }
 
   Future<void> deleteVoiceNote(int index) async {
     if (currentPlayingIndex.value == index) {
-      await _flutterTts.stop();
+      await _audioPlayer.stop();
       currentPlayingIndex.value = -1;
       isPlaying.value = false;
     }
@@ -211,6 +176,10 @@ class VoiceNotesController extends GetxController {
     try {
       final note = voiceNotes[index];
       await _databaseService.deleteVoiceNote(note.id);
+      final file = File(note.filePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
       voiceNotes.removeAt(index);
       Get.snackbar('Success', 'Voice note deleted');
     } catch (e) {
@@ -242,7 +211,8 @@ class VoiceNotesController extends GetxController {
 
   @override
   void onClose() {
-    _flutterTts.stop();
+    _audioPlayer.dispose();
+    _recorder.dispose();
     super.onClose();
   }
 }

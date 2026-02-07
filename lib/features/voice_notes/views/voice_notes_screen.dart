@@ -212,56 +212,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
               ],
             ),
           ),
-          // Real-time Speech-to-Text Section
-          Expanded(
-            flex: 1,
-            child: Container(
-              width: double.infinity,
-              margin: EdgeInsets.symmetric(vertical: 10),
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 12,
-                    offset: Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Real-time Transcription',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF003049),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Expanded(
-                    child: Obx(() => SingleChildScrollView(
-                          child: Text(
-                            controller.realTimeTranscription.value.isNotEmpty
-                                ? controller.realTimeTranscription.value
-                                : '...',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              color: controller
-                                      .realTimeTranscription.value.isNotEmpty
-                                  ? Colors.black
-                                  : Colors.grey[400],
-                            ),
-                          ),
-                        )),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          SizedBox(height: 20),
         ],
       ),
     );

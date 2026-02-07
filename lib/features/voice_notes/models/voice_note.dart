@@ -5,6 +5,7 @@ class VoiceNote {
   final DateTime createdAt;
   final int duration; // in seconds
   final bool isPlaying;
+  final String? transcript;
 
   VoiceNote({
     required this.id,
@@ -13,6 +14,7 @@ class VoiceNote {
     required this.createdAt,
     this.duration = 0,
     this.isPlaying = false,
+    this.transcript,
   });
 
   VoiceNote copyWith({
@@ -22,6 +24,7 @@ class VoiceNote {
     DateTime? createdAt,
     int? duration,
     bool? isPlaying,
+    String? transcript,
   }) {
     return VoiceNote(
       id: id ?? this.id,
@@ -30,6 +33,7 @@ class VoiceNote {
       createdAt: createdAt ?? this.createdAt,
       duration: duration ?? this.duration,
       isPlaying: isPlaying ?? this.isPlaying,
+      transcript: transcript ?? this.transcript,
     );
   }
 
@@ -41,6 +45,7 @@ class VoiceNote {
       'createdAt': createdAt.toIso8601String(),
       'duration': duration,
       'isPlaying': isPlaying,
+      'transcript': transcript,
     };
   }
 
@@ -52,6 +57,7 @@ class VoiceNote {
       createdAt: DateTime.parse(json['createdAt']),
       duration: json['duration'],
       isPlaying: json['isPlaying'],
+      transcript: json['transcript'],
     );
   }
 }
