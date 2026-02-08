@@ -23,6 +23,7 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+
     }
 
     private fun getConnectedAudioDeviceName(result: MethodChannel.Result) {
@@ -84,4 +85,5 @@ class MainActivity : FlutterActivity() {
             Manifest.permission.BLUETOOTH_CONNECT
         ) == PackageManager.PERMISSION_GRANTED
     }
+
 }

@@ -362,8 +362,7 @@ class _HomeScreenState extends State<HomeScreen>
                       }),
                       _buildTranslateButton(
                           'Headphone & Phone', Icons.headphones, () {
-                        Get.snackbar('Coming Soon',
-                            'Headphone & Phone feature coming soon');
+                        Get.toNamed('/headphone_phone');
                       }),
                       _buildTranslateButton('Voice Notes', Icons.note, () {
                         Get.toNamed('/voice_notes');
