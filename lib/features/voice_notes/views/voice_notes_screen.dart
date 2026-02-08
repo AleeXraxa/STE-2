@@ -61,7 +61,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFFEDF2F4),
+        backgroundColor: Color(0xFFF8FAFC),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -70,7 +70,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF003049),
+            color: Color(0xFF0F172A),
           ),
         ),
         content: Container(
@@ -79,7 +79,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.08),
                 blurRadius: 8,
                 offset: Offset(0, 4),
               ),
@@ -123,7 +123,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
             child: Text(
               'Save',
               style: GoogleFonts.poppins(
-                color: Color(0xFF003049),
+                color: Color(0xFF0F172A),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -137,7 +137,6 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
     return Expanded(
       child: Column(
         children: [
-          // Recording Section
           Expanded(
             flex: 1,
             child: Column(
@@ -196,7 +195,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   'Recording...',
                   style: AppTextStyles.heading.copyWith(
                     fontSize: 28,
-                    color: Color(0xFF003049),
+                    color: Color(0xFF0F172A),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -231,10 +230,10 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFF003049).withOpacity(0.1),
+                    color: const Color(0xFF0F172A).withOpacity(0.08),
                     boxShadow: [
                       BoxShadow(
-                        color: Color(0xFF003049).withOpacity(0.2),
+                        color: const Color(0xFF0F172A).withOpacity(0.12),
                         blurRadius: 20,
                         offset: Offset(0, 10),
                       ),
@@ -243,7 +242,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   child: Icon(
                     Icons.mic_none,
                     size: 60,
-                    color: Color(0xFF003049),
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
                 SizedBox(height: 30),
@@ -251,7 +250,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   'No voice notes yet',
                   style: AppTextStyles.heading.copyWith(
                     fontSize: 24,
-                    color: Color(0xFF003049),
+                    color: Color(0xFF0F172A),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -281,7 +280,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withOpacity(0.08),
                     blurRadius: 10,
                     offset: Offset(0, 5),
                   ),
@@ -294,10 +293,10 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   height: 56,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFF003049),
+                    color: Color(0xFF0F172A),
                     boxShadow: [
                       BoxShadow(
-                        color: Color(0xFF003049).withOpacity(0.3),
+                        color: Color(0xFF0F172A).withOpacity(0.3),
                         blurRadius: 8,
                         offset: Offset(0, 4),
                       ),
@@ -321,7 +320,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
-                    color: Color(0xFF003049),
+                    color: Color(0xFF0F172A),
                   ),
                 ),
                 subtitle: Row(
@@ -347,7 +346,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.edit, color: Color(0xFF003049)),
+                      icon: Icon(Icons.edit, color: Color(0xFF0F172A)),
                       onPressed: () => _showRenameDialog(index),
                     ),
                     IconButton(
@@ -366,72 +365,89 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
 
   @override
   Widget build(BuildContext context) {
+    const Color bgTop = Color(0xFF0F172A);
+    const Color bgBottom = Color(0xFF1E293B);
+    const Color accent = Color(0xFFFB7185);
+    const Color accentDark = Color(0xFFE11D48);
+    const Color textPrimary = Color(0xFFF8FAFC);
+
     return Scaffold(
-      backgroundColor: Color(0xFFEDF2F4),
+      backgroundColor: bgTop,
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF003049)),
+          icon: Icon(Icons.arrow_back, color: textPrimary),
           onPressed: () => Get.back(),
         ),
         title: Text(
           'Voice Notes',
           style: AppTextStyles.heading.copyWith(
             fontSize: 20,
-            color: Color(0xFF003049),
+            color: textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Color(0xFFEDF2F4),
+        backgroundColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          Obx(() {
-            if (controller.isRecording.value) {
-              return _buildRecordingIndicator();
-            }
-            return _buildVoiceNotesList();
-          }),
-          FadeTransition(
-            opacity: _bottomFadeAnimation,
-            child: Container(
-              padding: EdgeInsets.all(20),
-              child: Obx(() => ElevatedButton.icon(
-                    onPressed: controller.isRecording.value
-                        ? controller.stopRecording
-                        : controller.startRecording,
-                    icon: Icon(
-                      controller.isRecording.value ? Icons.stop : Icons.mic,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    label: Text(
-                      controller.isRecording.value ? 'Stop' : 'Start Recording',
-                      style: AppTextStyles.button.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: controller.isRecording.value
-                          ? Colors.red
-                          : Color(0xFF003049),
-                      shadowColor: Colors.black.withOpacity(0.2),
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 40.0,
-                        vertical: 18.0,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      elevation: 8,
-                    ),
-                  )),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [bgTop, bgBottom],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
+        ),
+        child: Column(
+          children: [
+            Obx(() {
+              if (controller.isRecording.value) {
+                return _buildRecordingIndicator();
+              }
+              return _buildVoiceNotesList();
+            }),
+            FadeTransition(
+              opacity: _bottomFadeAnimation,
+              child: Container(
+                padding: EdgeInsets.all(20),
+                child: Obx(() => ElevatedButton.icon(
+                      onPressed: controller.isRecording.value
+                          ? controller.stopRecording
+                          : controller.startRecording,
+                      icon: Icon(
+                        controller.isRecording.value ? Icons.stop : Icons.mic,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      label: Text(
+                        controller.isRecording.value
+                            ? 'Stop'
+                            : 'Start Recording',
+                        style: AppTextStyles.button.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: controller.isRecording.value
+                            ? Colors.red
+                            : accentDark,
+                        shadowColor: accent.withOpacity(0.35),
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 40.0,
+                          vertical: 18.0,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        elevation: 8,
+                      ),
+                    )),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

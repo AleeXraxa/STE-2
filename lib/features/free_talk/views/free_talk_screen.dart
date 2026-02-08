@@ -196,213 +196,276 @@ class _FreeTalkScreenState extends State<FreeTalkScreen>
 
   @override
   Widget build(BuildContext context) {
+    const Color bgTop = Color(0xFF0F172A);
+    const Color bgBottom = Color(0xFF1E293B);
+    const Color accent = Color(0xFF2DD4BF);
+    const Color accentDark = Color(0xFF0F766E);
+    const Color panel = Color(0xFFF8FAFC);
+    const Color textPrimary = Color(0xFFF8FAFC);
+    const Color textMuted = Color(0xFF94A3B8);
+
     return Scaffold(
-      backgroundColor: Color(0xFFEDF2F4),
+      backgroundColor: bgTop,
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF003049)),
+          icon: Icon(Icons.arrow_back, color: textPrimary),
           onPressed: () => Get.back(),
         ),
         title: Text(
-          'Free Talk (Dual Ear)',
+          'Free Talk',
           style: AppTextStyles.heading
-              .copyWith(fontSize: 18, color: Color(0xFF003049)),
+              .copyWith(fontSize: 18, color: textPrimary),
         ),
-        backgroundColor: Color(0xFFEDF2F4),
+        backgroundColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showLanguagePicker(true),
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFEDF2F4),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                            color: Color(0xFF003049).withOpacity(0.2)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [bgTop, bgBottom],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dual Conversation',
+                      style: AppTextStyles.heading.copyWith(
+                        fontSize: 22,
+                        color: textPrimary,
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Pick two languages and keep the flow going.',
+                      style: AppTextStyles.body.copyWith(
+                        color: textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _showLanguagePicker(true),
+                            child: Container(
+                              height: 54,
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Obx(() => Text(
-                                    controller.languageAName.value,
-                                    style: AppTextStyles.button.copyWith(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14),
-                                  )),
+                                  const EdgeInsets.symmetric(horizontal: 14),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.08),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.language,
+                                      color: textPrimary),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Obx(() => Text(
+                                          controller.languageAName.value,
+                                          style: AppTextStyles.button.copyWith(
+                                            color: textPrimary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        )),
+                                  ),
+                                  const Icon(Icons.expand_more,
+                                      color: textPrimary),
+                                ],
+                              ),
                             ),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.arrow_drop_down,
-                                color: Color(0xFF003049)),
-                            onPressed: () => _showLanguagePicker(true),
+                        ),
+                        const SizedBox(width: 12),
+                        InkWell(
+                          onTap: () => controller.swapLanguages(),
+                          borderRadius: BorderRadius.circular(18),
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [accent, accentDark],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: accent.withOpacity(0.35),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.swap_horiz,
+                                color: Colors.white),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFF003049),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.swap_horiz, color: Colors.white),
-                    onPressed: () => controller.swapLanguages(),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showLanguagePicker(false),
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFEDF2F4),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                            color: Color(0xFF003049).withOpacity(0.2)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _showLanguagePicker(false),
+                            child: Container(
+                              height: 54,
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: Obx(() => Text(
-                                    controller.languageBName.value,
-                                    style: AppTextStyles.button.copyWith(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14),
-                                  )),
+                                  const EdgeInsets.symmetric(horizontal: 14),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.08),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.language,
+                                      color: textPrimary),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Obx(() => Text(
+                                          controller.languageBName.value,
+                                          style: AppTextStyles.button.copyWith(
+                                            color: textPrimary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        )),
+                                  ),
+                                  const Icon(Icons.expand_more,
+                                      color: textPrimary),
+                                ],
+                              ),
                             ),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.arrow_drop_down,
-                                color: Color(0xFF003049)),
-                            onPressed: () => _showLanguagePicker(false),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          // Chat Messages
-          Expanded(
-            child: Obx(() {
-              final messages = controller.messages;
-              if (messages.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (controller.isListening.value)
-                        SpinKitWave(
-                          color: Color(0xFF003049),
-                          size: 36.0,
-                        ),
-                      SizedBox(height: 12),
-                      Text(
-                        controller.currentStatus.value,
-                        style: AppTextStyles.heading.copyWith(
-                          fontSize: 24,
-                          color: Color(0xFF003049),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+              ),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.only(top: 12),
+                  decoration: const BoxDecoration(
+                    color: panel,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                   ),
-                );
-              }
-              // Auto-scroll to bottom when messages change
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _scrollToBottom();
-              });
-              return ListView.builder(
-                controller: _scrollController,
-                itemCount: messages.length,
-                physics: BouncingScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return FreeTalkBubble(message: messages[index]);
-                },
-              );
-            }),
+                  child: Obx(() {
+                    final messages = controller.messages;
+                    if (messages.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (controller.isListening.value)
+                              SpinKitWave(
+                                color: accentDark,
+                                size: 36.0,
+                              ),
+                            const SizedBox(height: 12),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 250),
+                              child: Text(
+                                controller.currentStatus.value,
+                                key: ValueKey(
+                                    controller.currentStatus.value),
+                                style: AppTextStyles.heading.copyWith(
+                                  fontSize: 20,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Tap the button to start',
+                              style: AppTextStyles.body.copyWith(
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _scrollToBottom();
+                    });
+                    return ListView.builder(
+                      controller: _scrollController,
+                      itemCount: messages.length,
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        return FreeTalkBubble(message: messages[index]);
+                      },
+                    );
+                  }),
+                ),
+              ),
+              FadeTransition(
+                opacity: _bottomFadeAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  child: Obx(() => ElevatedButton.icon(
+                        onPressed: controller.isListening.value
+                            ? controller.stopFreeTalk
+                            : controller.startFreeTalk,
+                        icon: Icon(
+                          controller.isListening.value
+                              ? Icons.stop
+                              : Icons.mic,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          controller.isListening.value
+                              ? 'Stop'
+                              : 'Start Speaking',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: controller.isListening.value
+                              ? Colors.red
+                              : accentDark,
+                          foregroundColor: Colors.white,
+                          textStyle: AppTextStyles.button.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32.0, vertical: 16.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          elevation: 8,
+                          shadowColor: accent.withOpacity(0.4),
+                        ),
+                      )),
+                ),
+              ),
+            ],
           ),
-          FadeTransition(
-            opacity: _bottomFadeAnimation,
-            child: Container(
-              padding: EdgeInsets.all(20.0),
-              child: Obx(() => ElevatedButton.icon(
-                    onPressed: controller.isListening.value
-                        ? controller.stopFreeTalk
-                        : controller.startFreeTalk,
-                    icon: Icon(
-                      controller.isListening.value ? Icons.stop : Icons.mic,
-                      color: Colors.white,
-                    ),
-                    label: Text(
-                        controller.isListening.value ? 'Stop' : 'Start Speak'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: controller.isListening.value
-                          ? Colors.red
-                          : Color(0xFF003049),
-                      shadowColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      textStyle: AppTextStyles.button
-                          .copyWith(fontWeight: FontWeight.bold, fontSize: 16),
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 32.0, vertical: 16.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                  )),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

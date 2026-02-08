@@ -49,7 +49,7 @@ class _HeadphonePhoneScreenState extends State<HeadphonePhoneScreen> {
         return Container(
           height: MediaQuery.of(context).size.height * 0.8,
           decoration: BoxDecoration(
-            color: const Color(0xFFEDF2F4),
+            color: const Color(0xFFEEF2F6),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
@@ -60,7 +60,7 @@ class _HeadphonePhoneScreenState extends State<HeadphonePhoneScreen> {
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: const BoxDecoration(
-                  color: Color(0xFF003049),
+                  color: Color(0xFF0F172A),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
@@ -96,7 +96,7 @@ class _HeadphonePhoneScreenState extends State<HeadphonePhoneScreen> {
                           hintText: 'Search languages...',
                           hintStyle: TextStyle(color: Colors.grey[600]),
                           prefixIcon:
-                              const Icon(Icons.search, color: Color(0xFF003049)),
+                              const Icon(Icons.search, color: Color(0xFF0F172A)),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20, vertical: 15),
@@ -146,7 +146,7 @@ class _HeadphonePhoneScreenState extends State<HeadphonePhoneScreen> {
                           ),
                           trailing: const Icon(
                             Icons.chevron_right,
-                            color: Color(0xFF003049),
+                            color: Color(0xFF0F172A),
                           ),
                           onTap: () {
                             if (isPhone) {
@@ -173,152 +173,214 @@ class _HeadphonePhoneScreenState extends State<HeadphonePhoneScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const Color bgTop = Color(0xFF0F172A);
+    const Color bgBottom = Color(0xFF1E293B);
+    const Color accent = Color(0xFF22D3EE);
+    const Color accentDark = Color(0xFF0E7490);
+    const Color panel = Color(0xFFF8FAFC);
+    const Color textPrimary = Color(0xFFF8FAFC);
+    const Color textMuted = Color(0xFF94A3B8);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFEDF2F4),
+      backgroundColor: bgTop,
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF003049)),
+          icon: const Icon(Icons.arrow_back, color: textPrimary),
           onPressed: () => Get.back(),
         ),
         title: Text(
           'Headphone & Phone',
-          style: AppTextStyles.heading
-              .copyWith(fontSize: 18, color: const Color(0xFF003049)),
+          style:
+              AppTextStyles.heading.copyWith(fontSize: 18, color: textPrimary),
         ),
-        backgroundColor: const Color(0xFFEDF2F4),
+        backgroundColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showLanguagePicker(isPhone: true),
-                    child: Obx(() => _langChip(
-                          title: 'Phone',
-                          value: controller.phoneLangName.value,
-                        )),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showLanguagePicker(isPhone: false),
-                    child: Obx(() => _langChip(
-                          title: 'Earbuds',
-                          value: controller.earbudLangName.value,
-                        )),
-                  ),
-                ),
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [bgTop, bgBottom],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          Expanded(
-            child: Obx(() {
-              final msgs = controller.messages;
-              if (msgs.isEmpty) {
-                return Center(
-                  child: Text(
-                    controller.status.value,
-                    style: AppTextStyles.heading.copyWith(
-                      fontSize: 20,
-                      color: const Color(0xFF003049),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dual Channel Talk',
+                      style: AppTextStyles.heading.copyWith(
+                        fontSize: 22,
+                        color: textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Hold phone to speak. Earbud listens for replies.',
+                      style: AppTextStyles.body.copyWith(
+                        color: textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _showLanguagePicker(isPhone: true),
+                            child: Obx(() => _langChip(
+                                  title: 'Phone',
+                                  value: controller.phoneLangName.value,
+                                  accent: accent,
+                                  textColor: textPrimary,
+                                )),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _showLanguagePicker(isPhone: false),
+                            child: Obx(() => _langChip(
+                                  title: 'Earbuds',
+                                  value: controller.earbudLangName.value,
+                                  accent: accent,
+                                  textColor: textPrimary,
+                                )),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.only(top: 12),
+                  decoration: const BoxDecoration(
+                    color: panel,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
                     ),
                   ),
-                );
-              }
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _scrollToBottom();
-              });
-              return ListView.builder(
-                controller: _scrollController,
-                itemCount: msgs.length,
-                itemBuilder: (context, index) {
-                  return _bubble(msgs[index]);
-                },
-              );
-            }),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Obx(() => Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTapDown: (_) => controller.startPhoneListening(),
-                        onTapUp: (_) => controller.stopPhoneListening(),
-                        onTapCancel: () => controller.stopPhoneListening(),
-                        child: Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: controller.isListeningPhone.value
-                                ? Colors.red
-                                : const Color(0xFF003049),
-                            borderRadius: BorderRadius.circular(12),
+                  child: Obx(() {
+                    final msgs = controller.messages;
+                    if (msgs.isEmpty) {
+                      return Center(
+                        child: Text(
+                          controller.status.value,
+                          style: AppTextStyles.heading.copyWith(
+                            fontSize: 20,
+                            color: const Color(0xFF0F172A),
                           ),
-                          child: Center(
-                            child: Text(
-                              controller.isListeningPhone.value
-                                  ? 'Listening...'
-                                  : 'Press to Talk (Phone)',
-                              style: AppTextStyles.button.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    }
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _scrollToBottom();
+                    });
+                    return ListView.builder(
+                      controller: _scrollController,
+                      itemCount: msgs.length,
+                      itemBuilder: (context, index) {
+                        return _bubble(msgs[index], accentDark);
+                      },
+                    );
+                  }),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Obx(() => Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTapDown: (_) => controller.startPhoneListening(),
+                            onTapUp: (_) => controller.stopPhoneListening(),
+                            onTapCancel: () => controller.stopPhoneListening(),
+                            child: Container(
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: controller.isListeningPhone.value
+                                    ? Colors.red
+                                    : accentDark,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: accent.withOpacity(0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  controller.isListeningPhone.value
+                                      ? 'Listening...'
+                                      : 'Hold to Talk (Phone)',
+                                  style: AppTextStyles.button.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: controller.isListeningEarbud.value
-                            ? Colors.red
-                            : const Color(0xFF003049),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.headphones, color: Colors.white),
-                    ),
-                  ],
-                )),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              'Tap your earbud media button to speak',
-              style: AppTextStyles.body.copyWith(
-                fontSize: 12,
-                color: Colors.black54,
+                        const SizedBox(width: 12),
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: controller.isListeningEarbud.value
+                                ? Colors.red
+                                : accentDark,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child:
+                              const Icon(Icons.headphones, color: Colors.white),
+                        ),
+                      ],
+                    )),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'Tap your earbud media button to speak',
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: 12,
+                    color: textMuted,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _langChip({required String title, required String value}) {
+  Widget _langChip({
+    required String title,
+    required String value,
+    required Color accent,
+    required Color textColor,
+  }) {
     return Container(
-      height: 50,
+      height: 54,
       decoration: BoxDecoration(
-        color: const Color(0xFFEDF2F4),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: const Color(0xFF003049).withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -327,7 +389,7 @@ class _HeadphonePhoneScreenState extends State<HeadphonePhoneScreen> {
             '$title: ',
             style: AppTextStyles.body.copyWith(
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF003049),
+              color: textColor,
             ),
           ),
           Expanded(
@@ -335,25 +397,25 @@ class _HeadphonePhoneScreenState extends State<HeadphonePhoneScreen> {
               value,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.body.copyWith(
-                color: Colors.black,
+                color: textColor,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          const Icon(Icons.arrow_drop_down, color: Color(0xFF003049)),
+          Icon(Icons.arrow_drop_down, color: accent),
         ],
       ),
     );
   }
 
-  Widget _bubble(HeadphonePhoneMessage msg) {
+  Widget _bubble(HeadphonePhoneMessage msg, Color accentDark) {
     return Align(
       alignment: msg.fromPhone ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: msg.fromPhone ? Colors.grey[300] : const Color(0xFF003049),
+          color: msg.fromPhone ? Colors.grey[200] : accentDark,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(

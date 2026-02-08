@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/translation_controller.dart';
 import 'chat_bubble.dart';
@@ -66,7 +66,6 @@ class _TranslationScreenState extends State<TranslationScreen>
   }
 
   void _showLanguagePicker(bool isSource) {
-    // Reset search when opening picker
     controller.updateSearchQuery('');
 
     showModalBottomSheet(
@@ -85,7 +84,6 @@ class _TranslationScreenState extends State<TranslationScreen>
           ),
           child: Column(
             children: [
-              // Header with Search
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
@@ -105,7 +103,6 @@ class _TranslationScreenState extends State<TranslationScreen>
                       ),
                     ),
                     SizedBox(height: 16),
-                    // Search Bar
                     Container(
                       height: 50,
                       decoration: BoxDecoration(
@@ -120,8 +117,7 @@ class _TranslationScreenState extends State<TranslationScreen>
                         ],
                       ),
                       child: TextField(
-                        onChanged: (value) =>
-                            controller.updateSearchQuery(value),
+                        onChanged: (value) => controller.updateSearchQuery(value),
                         decoration: InputDecoration(
                           hintText: 'Search languages...',
                           hintStyle: TextStyle(color: Colors.grey[600]),
@@ -137,8 +133,6 @@ class _TranslationScreenState extends State<TranslationScreen>
                   ],
                 ),
               ),
-
-              // Language List
               Expanded(
                 child: Obx(() => ListView.builder(
                       padding: EdgeInsets.symmetric(vertical: 10),
@@ -199,404 +193,484 @@ class _TranslationScreenState extends State<TranslationScreen>
       },
     );
   }
-
   @override
   Widget build(BuildContext context) {
+    const Color bgTop = Color(0xFF0F172A);
+    const Color bgBottom = Color(0xFF1E293B);
+    const Color accent = Color(0xFF38BDF8);
+    const Color accentDark = Color(0xFF0369A1);
+    const Color panel = Color(0xFFF8FAFC);
+    const Color textPrimary = Color(0xFFF8FAFC);
+    const Color textMuted = Color(0xFF94A3B8);
+
     return GetBuilder<TranslationController>(
       builder: (controller) => Scaffold(
-        backgroundColor: Color(0xFFEDF2F4),
+        backgroundColor: bgTop,
         appBar: AppBar(
           elevation: 0,
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Color(0xFF003049)),
+            icon: Icon(Icons.arrow_back, color: textPrimary),
             onPressed: () => Get.back(),
           ),
           title: Text(
             'Translation Machine',
             style: AppTextStyles.heading
-                .copyWith(fontSize: 18, color: Color(0xFF003049)),
+                .copyWith(fontSize: 18, color: textPrimary),
           ),
-          backgroundColor: Color(0xFFEDF2F4),
+          backgroundColor: Colors.transparent,
           actions: [
             IconButton(
-              icon: Icon(Icons.checklist, color: Color(0xFF003049)),
+              icon: Icon(Icons.checklist, color: textPrimary),
               onPressed: () => controller.isSelectionMode.toggle(),
             )
           ],
         ),
-        body: Column(
-          children: [
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _showLanguagePicker(true),
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Color(0xFFEDF2F4),
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
-                              color: Color(0xFF003049).withOpacity(0.2)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: Obx(() => Text(
-                                      controller
-                                          .selectedSourceLanguageName.value,
-                                      style: AppTextStyles.button.copyWith(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14),
-                                    )),
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.arrow_drop_down,
-                                  color: Color(0xFF003049)),
-                              onPressed: () => _showLanguagePicker(true),
-                            ),
-                          ],
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [bgTop, bgBottom],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Instant Translation',
+                        style: AppTextStyles.heading.copyWith(
+                          fontSize: 22,
+                          color: textPrimary,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFF003049),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.swap_horiz, color: Colors.white),
-                      onPressed: () => controller.swapLanguages(),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _showLanguagePicker(false),
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Color(0xFFEDF2F4),
-                          borderRadius: BorderRadius.circular(25),
-                          border: Border.all(
-                              color: Color(0xFF003049).withOpacity(0.2)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: Obx(() => Text(
-                                      controller
-                                          .selectedTargetLanguageName.value,
-                                      style: AppTextStyles.button.copyWith(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14),
-                                    )),
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.arrow_drop_down,
-                                  color: Color(0xFF003049)),
-                              onPressed: () => _showLanguagePicker(false),
-                            ),
-                          ],
+                      const SizedBox(height: 6),
+                      Text(
+                        'Set your source and target languages.',
+                        style: AppTextStyles.body.copyWith(
+                          color: textMuted,
+                          fontSize: 13,
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            /// ✅ Chat Messages List
-            Expanded(
-              child: GetBuilder<TranslationController>(
-                builder: (controller) {
-                  final messages = controller.chatMessages;
-                  // Scroll to bottom when messages change
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollToBottom();
-                  });
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount: messages.length,
-                    physics: BouncingScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return ChatBubble(
-                        key: ValueKey(index),
-                        message: messages[index],
-                        index: index,
-                        controller: controller,
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-
-            /// ✅ Bottom Buttons
-            FadeTransition(
-              opacity: _bottomFadeAnimation,
-              child: Container(
-                padding: EdgeInsets.all(20.0),
-                child: Obx(() => controller.isSelectionMode.value
-                    ? Row(
+                      const SizedBox(height: 14),
+                      Row(
                         children: [
                           Expanded(
-                            child: Obx(() => Container(
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        controller.selectedMessages.isNotEmpty
-                                            ? Color(0xFFEDF2F4)
-                                            : Colors.grey[300],
-                                    borderRadius: BorderRadius.circular(25),
-                                    border: Border.all(
-                                        color: controller
-                                                .selectedMessages.isNotEmpty
-                                            ? Colors.black.withOpacity(0.2)
-                                            : Colors.grey[400]!),
+                            child: GestureDetector(
+                              onTap: () => _showLanguagePicker(true),
+                              child: Container(
+                                height: 54,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.08),
                                   ),
-                                  child: ElevatedButton.icon(
-                                    onPressed: controller
-                                            .selectedMessages.isNotEmpty
-                                        ? () {
-                                            controller.deleteSelectedMessages();
-                                            controller.isSelectionMode.value =
-                                                false;
-                                          }
-                                        : null,
-                                    icon: Icon(Icons.delete,
-                                        color: controller
-                                                .selectedMessages.isNotEmpty
-                                            ? Colors.white
-                                            : Colors.grey[500]),
-                                    label: Text('Delete'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          controller.selectedMessages.isNotEmpty
-                                              ? Colors.red
-                                              : Colors.grey[400],
-                                      shadowColor: Colors.transparent,
-                                      foregroundColor:
-                                          controller.selectedMessages.isNotEmpty
-                                              ? Colors.white
-                                              : Colors.grey[500],
-                                      textStyle: AppTextStyles.button.copyWith(
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.language,
+                                        color: textPrimary),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Obx(() => Text(
+                                            controller
+                                                .selectedSourceLanguageName
+                                                .value,
+                                            style:
+                                                AppTextStyles.button.copyWith(
+                                              color: textPrimary,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          )),
+                                    ),
+                                    const Icon(Icons.expand_more,
+                                        color: textPrimary),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          InkWell(
+                            onTap: () => controller.swapLanguages(),
+                            borderRadius: BorderRadius.circular(18),
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [accent, accentDark],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: accent.withOpacity(0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.swap_horiz,
+                                  color: Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => _showLanguagePicker(false),
+                              child: Container(
+                                height: 54,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.08),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.language,
+                                        color: textPrimary),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Obx(() => Text(
+                                            controller
+                                                .selectedTargetLanguageName
+                                                .value,
+                                            style:
+                                                AppTextStyles.button.copyWith(
+                                              color: textPrimary,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          )),
+                                    ),
+                                    const Icon(Icons.expand_more,
+                                        color: textPrimary),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.only(top: 12),
+                    decoration: const BoxDecoration(
+                      color: panel,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                    ),
+                    child: GetBuilder<TranslationController>(
+                      builder: (controller) {
+                        final messages = controller.chatMessages;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _scrollToBottom();
+                        });
+                        return ListView.builder(
+                          controller: _scrollController,
+                          itemCount: messages.length,
+                          physics: const BouncingScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            return ChatBubble(
+                              key: ValueKey(index),
+                              message: messages[index],
+                              index: index,
+                              controller: controller,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                FadeTransition(
+                  opacity: _bottomFadeAnimation,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                    child: Obx(
+                      () => controller.isSelectionMode.value
+                          ? Row(
+                              children: [
+                                Expanded(
+                                  child: Obx(() => Container(
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          color: controller
+                                                  .selectedMessages.isNotEmpty
+                                              ? panel
+                                              : Colors.grey[300],
+                                          borderRadius:
+                                              BorderRadius.circular(18),
+                                          border: Border.all(
+                                              color: controller
+                                                      .selectedMessages
+                                                      .isNotEmpty
+                                                  ? Colors.black
+                                                      .withOpacity(0.2)
+                                                  : Colors.grey[400]!),
+                                        ),
+                                        child: ElevatedButton.icon(
+                                          onPressed: controller.selectedMessages
+                                                  .isNotEmpty
+                                              ? () {
+                                                  controller
+                                                      .deleteSelectedMessages();
+                                                  controller.isSelectionMode
+                                                      .value = false;
+                                                }
+                                              : null,
+                                          icon: Icon(Icons.delete,
+                                              color: controller.selectedMessages
+                                                      .isNotEmpty
+                                                  ? Colors.white
+                                                  : Colors.grey[500]),
+                                          label: const Text('Delete'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: controller
+                                                    .selectedMessages
+                                                    .isNotEmpty
+                                                ? Colors.red
+                                                : Colors.grey[400],
+                                            shadowColor: Colors.transparent,
+                                            foregroundColor: controller
+                                                    .selectedMessages
+                                                    .isNotEmpty
+                                                ? Colors.white
+                                                : Colors.grey[500],
+                                            textStyle:
+                                                AppTextStyles.button.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16.0),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(18),
+                                            ),
+                                          ),
+                                        ),
+                                      )),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: panel,
+                                      borderRadius: BorderRadius.circular(18),
+                                      border: Border.all(
+                                          color: Colors.black
+                                              .withOpacity(0.2)),
+                                    ),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        controller.isSelectionMode.value =
+                                            false;
+                                        controller.selectedMessages.clear();
+                                      },
+                                      icon: const Icon(Icons.cancel,
+                                          color: Colors.white),
+                                      label: const Text('Cancel'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: accentDark,
+                                        shadowColor: Colors.transparent,
+                                        foregroundColor: Colors.white,
+                                        textStyle:
+                                            AppTextStyles.button.copyWith(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 14),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 16.0),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
+                                          fontSize: 14,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16.0),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(18),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                )),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Container(
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Color(0xFFEDF2F4),
-                                borderRadius: BorderRadius.circular(25),
-                                border: Border.all(
-                                    color: Colors.black.withOpacity(0.2)),
-                              ),
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  controller.isSelectionMode.value = false;
-                                  controller.selectedMessages.clear();
-                                },
-                                icon: Icon(Icons.cancel, color: Colors.white),
-                                label: Text('Cancel'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0xFF003049),
-                                  shadowColor: Colors.transparent,
-                                  foregroundColor: Colors.white,
-                                  textStyle: AppTextStyles.button.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14),
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 16.0),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          Expanded(
-                            child: Obx(
-                              () => Container(
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: controller.isListeningTarget.value
-                                      ? Colors.grey[300]
-                                      : Color(0xFFEDF2F4),
-                                  borderRadius: BorderRadius.circular(25),
-                                  border: Border.all(
-                                      color: controller.isListeningTarget.value
-                                          ? Colors.grey[400]!
-                                          : Colors.black.withOpacity(0.2)),
-                                ),
-                                child: ElevatedButton.icon(
-                                  onPressed: controller.isListeningTarget.value
-                                      ? null
-                                      : (controller.isListeningSource.value
-                                          ? () =>
-                                              controller.stopListeningSource()
-                                          : () => controller
-                                              .startListeningSource()),
-                                  icon: Icon(
-                                    controller.isListeningSource.value
-                                        ? Icons.stop
-                                        : Icons.mic,
-                                    color: controller.isListeningTarget.value
-                                        ? Colors.grey[500]
-                                        : Colors.white,
-                                  ),
-                                  label: Obx(() => Text(
-                                      'Speak ${controller.selectedSourceLanguageName.value}',
-                                      style: TextStyle(
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Expanded(
+                                  child: Obx(
+                                    () => Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
                                         color:
                                             controller.isListeningTarget.value
-                                                ? Colors.grey[500]
-                                                : Colors.white,
-                                      ))),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        controller.isListeningTarget.value
-                                            ? Colors.grey[400]
-                                            : Color(0xFF003049),
-                                    shadowColor: Colors.transparent,
-                                    foregroundColor:
-                                        controller.isListeningTarget.value
-                                            ? Colors.grey[500]
-                                            : Colors.white,
-                                    textStyle: AppTextStyles.button.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14),
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 16.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(25),
+                                                ? Colors.grey[300]
+                                                : panel,
+                                        borderRadius:
+                                            BorderRadius.circular(18),
+                                        border: Border.all(
+                                            color: controller
+                                                    .isListeningTarget.value
+                                                ? Colors.grey[400]!
+                                                : Colors.black
+                                                    .withOpacity(0.2)),
+                                      ),
+                                      child: ElevatedButton.icon(
+                                        onPressed: controller
+                                                .isListeningTarget.value
+                                            ? null
+                                            : (controller
+                                                    .isListeningSource.value
+                                                ? () => controller
+                                                    .stopListeningSource()
+                                                : () => controller
+                                                    .startListeningSource()),
+                                        icon: Icon(
+                                          controller.isListeningSource.value
+                                              ? Icons.stop
+                                              : Icons.mic,
+                                          color: controller
+                                                  .isListeningTarget.value
+                                              ? Colors.grey[500]
+                                              : Colors.white,
+                                        ),
+                                        label: Obx(() => Text(
+                                            'Speak ${controller.selectedSourceLanguageName.value}',
+                                            style: TextStyle(
+                                              color: controller
+                                                      .isListeningTarget.value
+                                                  ? Colors.grey[500]
+                                                  : Colors.white,
+                                            ))),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: controller
+                                                  .isListeningTarget.value
+                                              ? Colors.grey[400]
+                                              : accentDark,
+                                          shadowColor: Colors.transparent,
+                                          foregroundColor: controller
+                                                  .isListeningTarget.value
+                                              ? Colors.grey[500]
+                                              : Colors.white,
+                                          textStyle:
+                                              AppTextStyles.button.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(18),
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Obx(
-                              () => Container(
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: controller.isListeningSource.value
-                                      ? Colors.grey[300]
-                                      : Color(0xFFEDF2F4),
-                                  borderRadius: BorderRadius.circular(25),
-                                  border: Border.all(
-                                      color: controller.isListeningSource.value
-                                          ? Colors.grey[400]!
-                                          : Colors.black.withOpacity(0.2)),
-                                ),
-                                child: ElevatedButton.icon(
-                                  onPressed: controller.isListeningSource.value
-                                      ? null
-                                      : (controller.isListeningTarget.value
-                                          ? () =>
-                                              controller.stopListeningTarget()
-                                          : () => controller
-                                              .startListeningTarget()),
-                                  icon: Icon(
-                                    controller.isListeningTarget.value
-                                        ? Icons.stop
-                                        : Icons.mic,
-                                    color: controller.isListeningSource.value
-                                        ? Colors.grey[500]
-                                        : Colors.white,
-                                  ),
-                                  label: Obx(() => Text(
-                                      'Speak ${controller.selectedTargetLanguageName.value}',
-                                      style: TextStyle(
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Obx(
+                                    () => Container(
+                                      height: 50,
+                                      decoration: BoxDecoration(
                                         color:
                                             controller.isListeningSource.value
-                                                ? Colors.grey[500]
-                                                : Colors.white,
-                                      ))),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        controller.isListeningSource.value
-                                            ? Colors.grey[400]
-                                            : Color(0xFF003049),
-                                    shadowColor: Colors.transparent,
-                                    foregroundColor:
-                                        controller.isListeningSource.value
-                                            ? Colors.grey[500]
-                                            : Colors.white,
-                                    textStyle: AppTextStyles.button.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14),
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 16.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(25),
+                                                ? Colors.grey[300]
+                                                : panel,
+                                        borderRadius:
+                                            BorderRadius.circular(18),
+                                        border: Border.all(
+                                            color: controller
+                                                    .isListeningSource.value
+                                                ? Colors.grey[400]!
+                                                : Colors.black
+                                                    .withOpacity(0.2)),
+                                      ),
+                                      child: ElevatedButton.icon(
+                                        onPressed: controller
+                                                .isListeningSource.value
+                                            ? null
+                                            : (controller
+                                                    .isListeningTarget.value
+                                                ? () => controller
+                                                    .stopListeningTarget()
+                                                : () => controller
+                                                    .startListeningTarget()),
+                                        icon: Icon(
+                                          controller.isListeningTarget.value
+                                              ? Icons.stop
+                                              : Icons.mic,
+                                          color: controller
+                                                  .isListeningSource.value
+                                              ? Colors.grey[500]
+                                              : Colors.white,
+                                        ),
+                                        label: Obx(() => Text(
+                                            'Speak ${controller.selectedTargetLanguageName.value}',
+                                            style: TextStyle(
+                                              color: controller
+                                                      .isListeningSource.value
+                                                  ? Colors.grey[500]
+                                                  : Colors.white,
+                                            ))),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: controller
+                                                  .isListeningSource.value
+                                              ? Colors.grey[400]
+                                              : accentDark,
+                                          shadowColor: Colors.transparent,
+                                          foregroundColor: controller
+                                                  .isListeningSource.value
+                                              ? Colors.grey[500]
+                                              : Colors.white,
+                                          textStyle:
+                                              AppTextStyles.button.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16.0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(18),
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ),
-                        ],
-                      )),
-              ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
