@@ -153,270 +153,423 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: Color(0xFFEDF2F4),
-      appBar: AppBar(
-        title: Text(
-          'Smart Translation Earbuds',
-          style: AppTextStyles.heading
-              .copyWith(fontSize: 18, color: Color(0xFF003049)),
-        ),
-        centerTitle: true,
-        backgroundColor: Color(0xFFEDF2F4),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.book, color: Color(0xFF003049)),
-            onPressed: () {
-              // TODO: Implement book functionality
-            },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0B1F2A),
+              Color(0xFF12394A),
+              Color(0xFF0B2A36),
+            ],
           ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            SizedBox(height: 40),
-            Center(
-              child: FadeTransition(
-                opacity: _connectFadeAnimation,
-                child: SlideTransition(
-                  position: _connectSlideAnimation,
-                  child: Obx(() {
-                    final bluetoothService = Get.find<BluetoothService>();
-                    if (bluetoothService.isConnecting.value) {
-                      return Column(
-                        children: [
-                          CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFF003049)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                FadeTransition(
+                  opacity: _connectFadeAnimation,
+                  child: SlideTransition(
+                    position: _connectSlideAnimation,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Smart Translation Earbuds',
+                                style: AppTextStyles.heading.copyWith(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Instant, hands-free conversations',
+                                style: AppTextStyles.body.copyWith(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Connecting...',
-                            style: AppTextStyles.body.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black),
-                          ),
-                        ],
-                      );
-                    } else if (bluetoothService
-                        .connectedDeviceName.value.isEmpty) {
-                      return Column(
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF003049),
-                            ),
-                            child: IconButton(
-                              icon: Icon(Icons.add,
-                                  color: Colors.white, size: 30),
-                              onPressed: () {
-                                bluetoothService.openBluetoothSettings();
-                              },
+                        ),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0x1AFFFFFF),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0x33FFFFFF),
                             ),
                           ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Connect',
-                            style: AppTextStyles.body.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black),
+                          child: IconButton(
+                            icon: const Icon(Icons.book, color: Colors.white),
+                            onPressed: () {},
                           ),
-                        ],
-                      );
-                    } else {
-                      return GestureDetector(
-                        onTap: () {
-                          bluetoothService.disconnect();
-                        },
-                        child: Column(
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                FadeTransition(
+                  opacity: _connectFadeAnimation,
+                  child: SlideTransition(
+                    position: _connectSlideAnimation,
+                    child: Obx(() {
+                      final bluetoothService = Get.find<BluetoothService>();
+                      final isConnected =
+                          bluetoothService.connectedDeviceName.value.isNotEmpty;
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x14FFFFFF),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0x22FFFFFF)),
+                        ),
+                        child: Row(
                           children: [
-                            Text(
-                              bluetoothService.connectedDeviceName.value,
-                              style: AppTextStyles.heading.copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black),
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: isConnected
+                                    ? const Color(0xFF00F5D4)
+                                    : const Color(0xFF203846),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                isConnected ? Icons.bluetooth_connected : Icons.bluetooth,
+                                color: isConnected
+                                    ? const Color(0xFF003049)
+                                    : Colors.white,
+                              ),
                             ),
-                            SizedBox(height: 5),
-                            Text(
-                              'Tap to disconnect',
-                              style: AppTextStyles.body.copyWith(
-                                  fontSize: 12, color: Colors.black54),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: bluetoothService.isConnecting.value
+                                  ? Text(
+                                      'Connecting...',
+                                      style: AppTextStyles.body.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                  : isConnected
+                                      ? Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              bluetoothService
+                                                  .connectedDeviceName.value,
+                                              style:
+                                                  AppTextStyles.body.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'Tap to disconnect',
+                                              style:
+                                                  AppTextStyles.body.copyWith(
+                                                color: Colors.white70,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'No device connected',
+                                              style:
+                                                  AppTextStyles.body.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'Open Bluetooth settings',
+                                              style:
+                                                  AppTextStyles.body.copyWith(
+                                                color: Colors.white70,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              height: 36,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isConnected
+                                      ? const Color(0xFF2B4756)
+                                      : const Color(0xFF00F5D4),
+                                  foregroundColor: isConnected
+                                      ? Colors.white
+                                      : const Color(0xFF003049),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  if (bluetoothService.isConnecting.value) {
+                                    return;
+                                  }
+                                  if (isConnected) {
+                                    bluetoothService.disconnect();
+                                  } else {
+                                    bluetoothService.openBluetoothSettings();
+                                  }
+                                },
+                                child: Text(
+                                  isConnected ? 'Disconnect' : 'Connect',
+                                  style: AppTextStyles.body.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       );
-                    }
-                  }),
+                    }),
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(height: 20),
-            FadeTransition(
-              opacity: _assistantFadeAnimation,
-              child: SlideTransition(
-                position: _assistantSlideAnimation,
-                child: GestureDetector(
-                  onTap: () => Get.toNamed('/assistant'),
-                  child: Container(
-                    width: double.infinity,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF003049),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Hi ~ I\'m your AI assistant',
-                            style: AppTextStyles.body.copyWith(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold),
+                const SizedBox(height: 18),
+                FadeTransition(
+                  opacity: _assistantFadeAnimation,
+                  child: SlideTransition(
+                    position: _assistantSlideAnimation,
+                    child: GestureDetector(
+                      onTap: () => Get.toNamed('/assistant'),
+                      child: Container(
+                        width: double.infinity,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [Color(0xFF00F5D4), Color(0xFF7BDFF2)],
                           ),
-                          SizedBox(height: 12),
-                          Container(
-                            width: MediaQuery.of(context).size.width * 0.6,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.25),
+                              blurRadius: 16,
+                              offset: const Offset(0, 10),
                             ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    'Tap to start Chatting',
-                                    style: AppTextStyles.body.copyWith(
-                                        color: Colors.black,
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: const Color(0x33003049),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.auto_awesome,
+                                  color: Color(0xFF003049),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'AI Assistant',
+                                      style: AppTextStyles.heading.copyWith(
+                                        color: const Color(0xFF003049),
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Ask anything. Translate instantly.',
+                                      style: AppTextStyles.body.copyWith(
+                                        color: const Color(0xCC003049),
                                         fontSize: 12,
-                                        fontWeight: FontWeight.bold),
-                                  ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Icon(
-                                  Icons.arrow_forward,
-                                  color: Colors.black,
-                                  size: 16,
-                                ),
-                              ],
-                            ),
+                              ),
+                              const Icon(
+                                Icons.arrow_forward,
+                                color: Color(0xFF003049),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                FadeTransition(
+                  opacity: _translateFadeAnimation,
+                  child: SlideTransition(
+                    position: _translateSlideAnimation,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Translate',
+                        style: AppTextStyles.heading
+                            .copyWith(fontSize: 18, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: FadeTransition(
+                    opacity: _buttonsFadeAnimation,
+                    child: SlideTransition(
+                      position: _buttonsSlideAnimation,
+                      child: GridView.count(
+                        crossAxisCount: size.width < 380 ? 1 : 2,
+                        childAspectRatio: size.width < 380 ? 3.2 : 1.6,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        children: [
+                          _buildFeatureCard(
+                            'Free Talk (Dual Ear)',
+                            Icons.mic,
+                            const Color(0xFF2B4756),
+                            () => Get.toNamed('/free_talk'),
+                          ),
+                          _buildFeatureCard(
+                            'Translation Machine',
+                            Icons.translate,
+                            const Color(0xFF1D6E7A),
+                            () => Get.toNamed('/translation'),
+                          ),
+                          _buildFeatureCard(
+                            'Headphone & Phone',
+                            Icons.headphones,
+                            const Color(0xFF305A73),
+                            () => Get.toNamed('/headphone_phone'),
+                          ),
+                          _buildFeatureCard(
+                            'Voice Notes',
+                            Icons.note,
+                            const Color(0xFF2D5A4F),
+                            () => Get.toNamed('/voice_notes'),
+                          ),
+                          _buildFeatureCard(
+                            'Photo Translation',
+                            Icons.photo,
+                            const Color(0xFF3D5A80),
+                            () => Get.toNamed('/photo_translation'),
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-            SizedBox(height: 20),
-            FadeTransition(
-              opacity: _translateFadeAnimation,
-              child: SlideTransition(
-                position: _translateSlideAnimation,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Translate',
-                    style: AppTextStyles.heading
-                        .copyWith(fontSize: 20, color: Colors.black),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Expanded(
-              child: FadeTransition(
-                opacity: _buttonsFadeAnimation,
-                child: SlideTransition(
-                  position: _buttonsSlideAnimation,
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    childAspectRatio: 2.5,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    children: [
-                      _buildTranslateButton('Free Talk (Dual Ear)', Icons.mic,
-                          () => Get.toNamed('/free_talk')),
-                      _buildTranslateButton(
-                          'Translation Machine', Icons.translate, () {
-                        Get.toNamed('/translation');
-                      }),
-                      _buildTranslateButton(
-                          'Headphone & Phone', Icons.headphones, () {
-                        Get.toNamed('/headphone_phone');
-                      }),
-                      _buildTranslateButton('Voice Notes', Icons.note, () {
-                        Get.toNamed('/voice_notes');
-                      }),
-                      _buildTranslateButton('Photo Translation', Icons.photo,
-                          () {
-                        Get.toNamed('/photo_translation');
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTranslateButton(
-      String title, IconData icon, VoidCallback onPressed) {
+  Widget _buildFeatureCard(
+    String title,
+    IconData icon,
+    Color accent,
+    VoidCallback onPressed,
+  ) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        width: double.infinity,
-        height: 40,
-        padding: EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: Color(0xFF003049),
-          borderRadius: BorderRadius.circular(10),
+          color: const Color(0x14FFFFFF),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0x22FFFFFF)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: Offset(0, 4),
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18),
+              ),
+              const Spacer(),
+              Text(
                 title,
                 style: AppTextStyles.body.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
-            ),
-            Icon(
-              icon,
-              color: Colors.white,
-            ),
-          ],
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Text(
+                    'Open',
+                    style: AppTextStyles.body.copyWith(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: Colors.white70,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

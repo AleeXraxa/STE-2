@@ -98,7 +98,7 @@ class _AssistantScreenState extends State<AssistantScreen>
         return Container(
           height: MediaQuery.of(context).size.height * 0.8,
           decoration: BoxDecoration(
-            color: Color(0xFFEDF2F4),
+            color: const Color(0xFF0B2A36),
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
@@ -110,7 +110,7 @@ class _AssistantScreenState extends State<AssistantScreen>
               Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: Color(0xFF003049),
+                  color: const Color(0xFF0B1F2A),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
@@ -120,10 +120,10 @@ class _AssistantScreenState extends State<AssistantScreen>
                   children: [
                     Text(
                       'Select Language',
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.manrope(
                         fontSize: 18,
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 16),
@@ -131,29 +131,23 @@ class _AssistantScreenState extends State<AssistantScreen>
                     Container(
                       height: 50,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0x1AFFFFFF),
                         borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
+                        border: Border.all(color: const Color(0x22FFFFFF)),
                       ),
                       child: TextField(
                         onChanged: (value) =>
                             controller.updateSearchQuery(value),
                         decoration: InputDecoration(
                           hintText: 'Search languages...',
-                          hintStyle: TextStyle(color: Colors.grey[600]),
+                          hintStyle: TextStyle(color: Colors.white70),
                           prefixIcon:
-                              Icon(Icons.search, color: Color(0xFF003049)),
+                              Icon(Icons.search, color: Colors.white),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
                               horizontal: 20, vertical: 15),
                         ),
-                        style: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
@@ -171,34 +165,29 @@ class _AssistantScreenState extends State<AssistantScreen>
                           margin:
                               EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: const Color(0x14FFFFFF),
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                            border:
+                                Border.all(color: const Color(0x22FFFFFF)),
                           ),
                           child: ListTile(
                             title: Text(
                               lang['name']!,
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
+                              style: GoogleFonts.manrope(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                             subtitle: Text(
                               lang['code']!,
-                              style: GoogleFonts.montserrat(
+                              style: GoogleFonts.manrope(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: Colors.white70,
                               ),
                             ),
                             trailing: Icon(
                               Icons.chevron_right,
-                              color: Color(0xFF003049),
+                              color: Colors.white70,
                             ),
                             onTap: () {
                               controller.selectLanguage(
@@ -219,59 +208,111 @@ class _AssistantScreenState extends State<AssistantScreen>
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: Color(0xFFEDF2F4),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Color(0xFFEDF2F4),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF003049)),
-          onPressed: () => Get.back(),
-        ),
-        actions: [
-          GestureDetector(
-            onTap: () => _showLanguagePicker(),
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: 8),
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Color(0xFF003049),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Obx(() => Text(
-                        controller.selectedLanguageName.value,
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )),
-                  SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Icon(Icons.book, color: Color(0xFF003049)),
-        ],
-      ),
-      body: Obx(() => Column(
-            children: [
-              Expanded(
-                child: controller.chatMessages.isEmpty &&
-                        !controller.isListening.value
-                    ? _buildIntro()
-                    : _buildMessages(),
-              ),
-              _buildBottomSection(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0B1F2A),
+              Color(0xFF12394A),
+              Color(0xFF0B2A36),
             ],
-          )),
+          ),
+        ),
+        child: SafeArea(
+          child: Obx(() => Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0x1AFFFFFF),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0x22FFFFFF)),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back,
+                                color: Colors.white),
+                            onPressed: () => Get.back(),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'AI Assistant',
+                            style: GoogleFonts.manrope(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => _showLanguagePicker(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0x14FFFFFF),
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: const Color(0x22FFFFFF)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.language,
+                                    color: Colors.white, size: 14),
+                                const SizedBox(width: 6),
+                                Obx(() => Text(
+                                      controller.selectedLanguageName.value,
+                                      style: GoogleFonts.manrope(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )),
+                                const SizedBox(width: 2),
+                                const Icon(Icons.arrow_drop_down,
+                                    color: Colors.white, size: 16),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0x1AFFFFFF),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0x22FFFFFF)),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.book, color: Colors.white),
+                            onPressed: () {},
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: controller.chatMessages.isEmpty &&
+                            !controller.isListening.value
+                        ? _buildIntro()
+                        : _buildMessages(),
+                  ),
+                  _buildBottomSection(),
+                ],
+              )),
+        ),
+      ),
     );
   }
 
@@ -279,46 +320,42 @@ class _AssistantScreenState extends State<AssistantScreen>
     return SingleChildScrollView(
       child: Column(
         children: [
-          SizedBox(height: 30),
+          SizedBox(height: 24),
           FadeTransition(
             opacity: _circleFadeAnimation,
             child: Container(
-              width: 100,
-              height: 100,
+              width: 110,
+              height: 110,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFF003049),
+                gradient: const RadialGradient(
+                  colors: [Color(0xFF00F5D4), Color(0xFF12394A)],
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
+                    color: Colors.black.withOpacity(0.35),
+                    blurRadius: 16,
+                    offset: Offset(0, 8),
                   ),
                 ],
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.smart_toy,
-                size: 50,
-                color: Colors.white,
+                size: 52,
+                color: Color(0xFF003049),
               ),
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 16),
           FadeTransition(
             opacity: _textFadeAnimation,
             child: Container(
               margin: EdgeInsets.symmetric(horizontal: 20),
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Color(0xFF003049),
+                color: Color(0x14FFFFFF),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                border: Border.all(color: const Color(0x22FFFFFF)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -326,19 +363,19 @@ class _AssistantScreenState extends State<AssistantScreen>
                   Text(
                     "Hi~ I'm your AI assistant",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.manrope(
                       color: Colors.white,
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   SizedBox(height: 8),
                   Text(
                     "If you have any question, you can ask me at any time~",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
-                      color: Colors.white,
-                      fontSize: 14,
+                    style: GoogleFonts.manrope(
+                      color: Colors.white70,
+                      fontSize: 13,
                     ),
                   ),
                 ],
@@ -402,20 +439,14 @@ class _AssistantScreenState extends State<AssistantScreen>
           constraints:
               BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
           decoration: BoxDecoration(
-            color: isUser ? Colors.grey[300] : Color(0xFF003049),
+            color: isUser ? const Color(0xFF1D3A4A) : const Color(0xFF00F5D4),
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),
               bottomLeft: isUser ? Radius.circular(16) : Radius.circular(4),
               bottomRight: isUser ? Radius.circular(4) : Radius.circular(16),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: const Color(0x22FFFFFF)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -423,10 +454,10 @@ class _AssistantScreenState extends State<AssistantScreen>
               Flexible(
                 child: Text(
                   text,
-                  style: GoogleFonts.montserrat(
-                    color: isUser ? Colors.black : Colors.white,
+                  style: GoogleFonts.manrope(
+                    color: isUser ? Colors.white : const Color(0xFF003049),
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -439,7 +470,7 @@ class _AssistantScreenState extends State<AssistantScreen>
                           controller.speakingIndex.value == index
                               ? Icons.stop
                               : Icons.play_arrow,
-                          color: Colors.white,
+                          color: const Color(0xFF003049),
                           size: 20,
                         ),
                       ),
@@ -458,27 +489,21 @@ class _AssistantScreenState extends State<AssistantScreen>
         margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(0xFF003049),
+          color: const Color(0x14FFFFFF),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
             bottomLeft: Radius.circular(4),
             bottomRight: Radius.circular(16),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
+          border: Border.all(color: const Color(0x22FFFFFF)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'AI is thinking...',
-              style: GoogleFonts.montserrat(
+              style: GoogleFonts.manrope(
                 color: Colors.white,
                 fontSize: 14,
               ),
@@ -505,13 +530,14 @@ class _AssistantScreenState extends State<AssistantScreen>
         margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.red[100],
+          color: const Color(0x33FF6B6B),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
             bottomLeft: Radius.circular(4),
             bottomRight: Radius.circular(16),
           ),
+          border: Border.all(color: const Color(0x55FF6B6B)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -519,8 +545,8 @@ class _AssistantScreenState extends State<AssistantScreen>
             Flexible(
               child: Text(
                 message,
-                style: GoogleFonts.montserrat(
-                  color: Colors.red[900],
+                style: GoogleFonts.manrope(
+                  color: Colors.white,
                   fontSize: 13,
                 ),
               ),
@@ -530,9 +556,9 @@ class _AssistantScreenState extends State<AssistantScreen>
               onPressed: controller.retryLast,
               child: Text(
                 'Retry',
-                style: GoogleFonts.montserrat(
-                  color: Colors.red[900],
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.manrope(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -547,9 +573,9 @@ class _AssistantScreenState extends State<AssistantScreen>
         opacity: _bottomFadeAnimation,
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Color(0xFF003049),
+            color: const Color(0xFF0B2A36),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -570,29 +596,30 @@ class _AssistantScreenState extends State<AssistantScreen>
                           onChanged: (value) =>
                               setState(() => hasText = value.isNotEmpty),
                           style: TextStyle(
-                              color: Colors.black, fontWeight: FontWeight.w600),
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600),
                           decoration: InputDecoration(
                             hintText: 'Please enter what you want to say~',
                             hintStyle:
-                                TextStyle(color: Colors.black, fontSize: 12),
+                                TextStyle(color: Colors.white70, fontSize: 12),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: const Color(0x1AFFFFFF),
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 15),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide:
-                                  BorderSide(color: Colors.black, width: 1),
+                                  BorderSide(color: Colors.white24, width: 1),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide:
-                                  BorderSide(color: Colors.black, width: 1),
+                                  BorderSide(color: Colors.white24, width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide:
-                                  BorderSide(color: Colors.black, width: 2),
+                                  BorderSide(color: Colors.white, width: 1.5),
                             ),
                           ),
                         ),
@@ -617,13 +644,12 @@ class _AssistantScreenState extends State<AssistantScreen>
                           height: 50,
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
-                            color: Color(0xFF003049),
+                            color: const Color(0xFF00F5D4),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.white, width: 1),
                           ),
                           child: Icon(
                             hasText ? Icons.send : Icons.mic,
-                            color: Colors.white,
+                            color: const Color(0xFF003049),
                             size: 24,
                           ),
                         ),
@@ -645,10 +671,12 @@ class _AssistantScreenState extends State<AssistantScreen>
                               height: 50,
                               padding: EdgeInsets.symmetric(horizontal: 10),
                               decoration: BoxDecoration(
-                                color: Color(0xFF003049),
+                                color: controller.isListening.value
+                                    ? const Color(0xFF00F5D4)
+                                    : const Color(0x1AFFFFFF),
                                 borderRadius: BorderRadius.circular(10),
                                 border:
-                                    Border.all(color: Colors.white, width: 1),
+                                    Border.all(color: Colors.white24, width: 1),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -657,7 +685,9 @@ class _AssistantScreenState extends State<AssistantScreen>
                                     controller.isListening.value
                                         ? Icons.stop
                                         : Icons.mic,
-                                    color: Colors.white,
+                                    color: controller.isListening.value
+                                        ? const Color(0xFF003049)
+                                        : Colors.white,
                                     size: 20,
                                   ),
                                   SizedBox(width: 8),
@@ -665,8 +695,10 @@ class _AssistantScreenState extends State<AssistantScreen>
                                     controller.isListening.value
                                         ? 'Stop & Send'
                                         : 'Click and Speak',
-                                    style: GoogleFonts.montserrat(
-                                      color: Colors.white,
+                                    style: GoogleFonts.manrope(
+                                      color: controller.isListening.value
+                                          ? const Color(0xFF003049)
+                                          : Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),
@@ -686,9 +718,9 @@ class _AssistantScreenState extends State<AssistantScreen>
                           height: 50,
                           padding: EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
-                            color: Color(0xFF003049),
+                            color: const Color(0x1AFFFFFF),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.white, width: 1),
+                            border: Border.all(color: Colors.white24, width: 1),
                           ),
                           child: Icon(Icons.keyboard,
                               color: Colors.white, size: 24),

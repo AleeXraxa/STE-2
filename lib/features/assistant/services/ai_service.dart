@@ -117,7 +117,8 @@ class AIService {
   String _buildPrompt(List<ChatMessage> messages) {
     final buffer = StringBuffer();
     for (final msg in messages) {
-      buffer.writeln(msg.isUser ? 'User: ${msg.text}' : 'Assistant: ${msg.text}');
+      buffer
+          .writeln(msg.isUser ? 'User: ${msg.text}' : 'Assistant: ${msg.text}');
     }
     buffer.writeln('Assistant:');
     return buffer.toString();
