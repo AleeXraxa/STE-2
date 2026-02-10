@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:translator/translator.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart';
 import '../../../core/constants/languages.dart';
@@ -10,6 +11,7 @@ class AssistantController extends GetxController {
   final SpeechToText _speechToText = SpeechToText();
   final FlutterTts _flutterTts = FlutterTts();
   final AIService _aiService = AIService();
+  final GoogleTranslator _translator = GoogleTranslator();
 
   RxBool isListening = false.obs;
   RxString livePartialText = ''.obs;
@@ -180,7 +182,12 @@ class AssistantController extends GetxController {
       chatMessages.add(ChatMessage.ai(''));
 
       String accumulated = '';
-      await for (final chunk in _aiService.getAIResponseStream(context)) {
+      final responseLanguage =
+          await _responseLanguageForMessage(_lastUserMessage ?? '');
+      await for (final chunk in _aiService.getAIResponseStream(
+        context,
+        responseLanguage: responseLanguage,
+      )) {
         if (requestId != _activeRequestId) {
           break;
         }
@@ -230,6 +237,52 @@ class AssistantController extends GetxController {
     await _flutterTts.setSpeechRate(0.5);
     await _flutterTts.setPitch(1.0);
     await _flutterTts.setVolume(1.0);
+  }
+
+  Future<String> _responseLanguageForMessage(String text) async {
+    final selectedCode = selectedLanguage.value;
+    if (selectedCode == 'en' || selectedCode.startsWith('en')) {
+      return 'English';
+    }
+    final detected = await _detectLanguageCode(text);
+    if (!_matchesLanguageCode(detected, selectedCode)) {
+      return 'English';
+    }
+    return _languageNameForCode(selectedCode) ?? 'English';
+  }
+
+  Future<String?> _detectLanguageCode(String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    final sample =
+        trimmed.length > 200 ? trimmed.substring(0, 200) : trimmed;
+    try {
+      final result = await _translator.translate(sample, to: 'en', from: 'auto');
+      return result.sourceLanguage.code.toLowerCase();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _matchesLanguageCode(String? detected, String selected) {
+    if (detected == null) return false;
+    final d = detected.toLowerCase();
+    final s = selected.toLowerCase();
+    if (d == s) return true;
+    if (s.contains('-')) {
+      return d == s.split('-').first;
+    }
+    if (d.contains('-')) {
+      return d.split('-').first == s;
+    }
+    return d.startsWith(s) || s.startsWith(d);
+  }
+
+  String? _languageNameForCode(String code) {
+    for (final lang in supportedLanguages) {
+      if (lang['code'] == code) return lang['name'];
+    }
+    return null;
   }
 
   @override

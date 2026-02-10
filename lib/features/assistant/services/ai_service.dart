@@ -13,7 +13,8 @@ class AIService {
     _activeClient = null;
   }
 
-  Future<String> getAIResponse(List<ChatMessage> messages) async {
+  Future<String> getAIResponse(List<ChatMessage> messages,
+      {required String responseLanguage}) async {
     final accountId = dotenv.env['CLOUDFLARE_ACCOUNT_ID'] ?? '';
     final apiToken = dotenv.env['CLOUDFLARE_API_TOKEN'] ?? '';
     final model = dotenv.env['CLOUDFLARE_MODEL']?.trim().isNotEmpty == true
@@ -29,7 +30,7 @@ class AIService {
         : messages;
 
     // Build conversation history
-    final prompt = _buildPrompt(recentMessages);
+    final prompt = _buildPrompt(recentMessages, responseLanguage);
     final requestBody = {
       'prompt': prompt,
     };
@@ -62,7 +63,8 @@ class AIService {
     }
   }
 
-  Stream<String> getAIResponseStream(List<ChatMessage> messages) async* {
+  Stream<String> getAIResponseStream(List<ChatMessage> messages,
+      {required String responseLanguage}) async* {
     final accountId = dotenv.env['CLOUDFLARE_ACCOUNT_ID'] ?? '';
     final apiToken = dotenv.env['CLOUDFLARE_API_TOKEN'] ?? '';
     final model = dotenv.env['CLOUDFLARE_MODEL']?.trim().isNotEmpty == true
@@ -78,7 +80,7 @@ class AIService {
         ? messages.sublist(messages.length - 10)
         : messages;
 
-    final prompt = _buildPrompt(recentMessages);
+    final prompt = _buildPrompt(recentMessages, responseLanguage);
     final requestBody = jsonEncode({
       'prompt': prompt,
       'stream': true,
@@ -136,8 +138,10 @@ class AIService {
     }
   }
 
-  String _buildPrompt(List<ChatMessage> messages) {
+  String _buildPrompt(List<ChatMessage> messages, String responseLanguage) {
     final buffer = StringBuffer();
+    buffer.writeln(
+        'System: You are a helpful assistant. Respond in $responseLanguage.');
     for (final msg in messages) {
       buffer
           .writeln(msg.isUser ? 'User: ${msg.text}' : 'Assistant: ${msg.text}');
