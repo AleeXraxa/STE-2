@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/chat_message.dart';
@@ -6,6 +7,7 @@ import '../models/chat_message.dart';
 class AIService {
   // Cloudflare Workers AI
   static const String _defaultModel = '@cf/meta/llama-3.1-8b-instruct';
+  static const String _defaultAsrModel = '@cf/openai/whisper-large-v3-turbo';
   http.Client? _activeClient;
 
   void cancelActive() {
@@ -148,5 +150,96 @@ class AIService {
     }
     buffer.writeln('Assistant:');
     return buffer.toString();
+  }
+
+  Future<String> transcribeAudioBytes(Uint8List bytes,
+      {String? language, bool vadFilter = false}) async {
+    final accountId = dotenv.env['CLOUDFLARE_ACCOUNT_ID'] ?? '';
+    final apiToken = dotenv.env['CLOUDFLARE_API_TOKEN'] ?? '';
+    final model =
+        dotenv.env['CLOUDFLARE_ASR_MODEL']?.trim().isNotEmpty == true
+            ? dotenv.env['CLOUDFLARE_ASR_MODEL']!.trim()
+            : _defaultAsrModel;
+    if (accountId.isEmpty || apiToken.isEmpty) {
+      return 'ASR is not configured. Please set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in .env.';
+    }
+
+    final requestBody = <String, dynamic>{
+      'audio': base64Encode(bytes),
+      'task': 'transcribe',
+      'vad_filter': vadFilter,
+    };
+    if (language != null && language.trim().isNotEmpty) {
+      requestBody['language'] = language.trim();
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://api.cloudflare.com/client/v4/accounts/$accountId/ai/run/$model'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final text = data['result']?['text'];
+        if (text is String && text.trim().isNotEmpty) {
+          return text.trim();
+        }
+        return '';
+      } else {
+        print('ASR API Error: ${response.statusCode} - ${response.body}');
+        return '';
+      }
+    } catch (e) {
+      print('ASR Service Error: $e');
+      return '';
+    }
+  }
+
+  Future<String> translateText(String text,
+      {required String targetLanguage}) async {
+    final accountId = dotenv.env['CLOUDFLARE_ACCOUNT_ID'] ?? '';
+    final apiToken = dotenv.env['CLOUDFLARE_API_TOKEN'] ?? '';
+    final model = dotenv.env['CLOUDFLARE_MODEL']?.trim().isNotEmpty == true
+        ? dotenv.env['CLOUDFLARE_MODEL']!.trim()
+        : _defaultModel;
+    if (accountId.isEmpty || apiToken.isEmpty) {
+      return 'Translation is not configured. Please set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in .env.';
+    }
+
+    final prompt = 'Translate the following text to $targetLanguage. '
+        'Return only the translated text.\n\n$text';
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'https://api.cloudflare.com/client/v4/accounts/$accountId/ai/run/$model'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+        body: jsonEncode({'prompt': prompt}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final result = data['result']?['response'];
+        if (result is String && result.trim().isNotEmpty) {
+          return result.trim();
+        }
+        return '';
+      } else {
+        print('Translate API Error: ${response.statusCode} - ${response.body}');
+        return '';
+      }
+    } catch (e) {
+      print('Translate Service Error: $e');
+      return '';
+    }
   }
 }

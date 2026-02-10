@@ -1,8 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import '../../../core/services/database_service.dart';
+import '../../assistant/services/ai_service.dart';
 import '../models/voice_note.dart';
 import '../../../core/services/permission_service.dart';
 
@@ -10,14 +15,22 @@ class VoiceNotesController extends GetxController {
   final AudioPlayer _audioPlayer = AudioPlayer();
   final DatabaseService _databaseService = DatabaseService();
   final SpeechToText _speechToText = SpeechToText();
+  final AudioRecorder _recorder = AudioRecorder();
+  final AIService _aiService = AIService();
 
   RxBool isRecording = false.obs;
+  RxBool isCountingDown = false.obs;
   RxBool isPlaying = false.obs;
   RxBool isTranscribing = false.obs;
   RxInt recordingDuration = 0.obs;
+  RxInt countdownSeconds = 0.obs;
   RxInt currentPlayingIndex = (-1).obs;
   RxList<VoiceNote> voiceNotes = <VoiceNote>[].obs;
   RxString liveTranscript = ''.obs;
+  RxDouble audioLevel = 0.0.obs;
+  RxSet<String> transcribingIds = <String>{}.obs;
+  RxSet<String> transcriptionFailedIds = <String>{}.obs;
+  RxMap<String, int> fileSizes = <String, int>{}.obs;
 
   // Current recording state
   String? _currentFilePath;
@@ -27,6 +40,7 @@ class VoiceNotesController extends GetxController {
   String _transcriptBuffer = '';
   bool _speechReady = false;
   bool _speechInitializing = false;
+  Timer? _levelTimer;
 
   @override
   void onInit() {
@@ -44,6 +58,9 @@ class VoiceNotesController extends GetxController {
     try {
       final notes = await _databaseService.getVoiceNotes();
       voiceNotes.addAll(notes);
+      for (final note in notes) {
+        _cacheFileSize(note);
+      }
     } catch (e) {
       print('Error loading voice notes: $e');
       Get.snackbar('Error', 'Failed to load voice notes');
@@ -63,22 +80,33 @@ class VoiceNotesController extends GetxController {
   }
 
   Future<void> startRecording() async {
+    if (isRecording.value || isCountingDown.value) return;
     final granted = await requestPermissions();
     if (!granted) {
       return;
     }
 
-    // Initialize speech-to-text for live transcript
-    liveTranscript.value = '';
-    _transcriptBuffer = '';
-    isTranscribing.value = false;
-    await _startTranscription();
-
-    isRecording.value = true;
-    recordingDuration.value = 0;
+    final countdownOk = await _runCountdown();
+    if (!countdownOk) {
+      return;
+    }
 
     _currentRecordingId = DateTime.now().millisecondsSinceEpoch.toString();
     _currentFilePath = null;
+
+    final audioStarted = await _startAudioRecording();
+    if (!audioStarted) {
+      Get.snackbar('Recording', 'Failed to start audio recording');
+      return;
+    }
+
+    isRecording.value = true;
+
+    // Post-recording transcription only
+    liveTranscript.value = '';
+    _transcriptBuffer = '';
+    isTranscribing.value = false;
+    recordingDuration.value = 0;
 
     // Start duration timer
     _startDurationTimer();
@@ -94,7 +122,9 @@ class VoiceNotesController extends GetxController {
   }
 
   Future<void> stopRecording() async {
+    if (!isRecording.value) return;
     isRecording.value = false;
+    _stopLevelTimer();
     if (_speechToText.isListening) {
       await _speechToText.stop();
     }
@@ -102,6 +132,7 @@ class VoiceNotesController extends GetxController {
     _speechReady = false;
     _speechInitializing = false;
     isTranscribing.value = false;
+    await _stopAudioRecording();
 
     _finalizeTranscript();
 
@@ -137,10 +168,14 @@ class VoiceNotesController extends GetxController {
     try {
       await _databaseService.insertVoiceNote(newNote);
       voiceNotes.add(newNote);
-      Get.snackbar('Success', 'Transcript saved');
+      _cacheFileSize(newNote);
     } catch (e) {
       print('Error saving voice note: $e');
       Get.snackbar('Error', 'Failed to save voice note');
+    }
+
+    if (filePath.isNotEmpty) {
+      _transcribeSavedAudio(id, filePath);
     }
 
     recordingDuration.value = 0;
@@ -148,6 +183,174 @@ class VoiceNotesController extends GetxController {
     _currentRecordingId = null;
     liveTranscript.value = '';
     _transcriptBuffer = '';
+  }
+
+  Future<void> cancelRecording() async {
+    if (!isRecording.value && !isCountingDown.value) return;
+    isCountingDown.value = false;
+    countdownSeconds.value = 0;
+    isRecording.value = false;
+    _stopLevelTimer();
+    if (_speechToText.isListening) {
+      await _speechToText.stop();
+    }
+    await _speechToText.cancel();
+    _speechReady = false;
+    _speechInitializing = false;
+    isTranscribing.value = false;
+    await _stopAudioRecording();
+    if (_currentFilePath != null && _currentFilePath!.isNotEmpty) {
+      final file = File(_currentFilePath!);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+    _currentFilePath = null;
+    _currentRecordingId = null;
+    recordingDuration.value = 0;
+    liveTranscript.value = '';
+    _transcriptBuffer = '';
+  }
+
+  Future<bool> _runCountdown() async {
+    isCountingDown.value = true;
+    for (var i = 3; i >= 1; i--) {
+      countdownSeconds.value = i;
+      await Future.delayed(const Duration(seconds: 1));
+      if (!isCountingDown.value) {
+        countdownSeconds.value = 0;
+        return false;
+      }
+    }
+    countdownSeconds.value = 0;
+    isCountingDown.value = false;
+    return true;
+  }
+
+  Future<void> _transcribeSavedAudio(String id, String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        Get.snackbar('Transcription', 'Audio file not found');
+        return;
+      }
+      transcribingIds.add(id);
+      transcriptionFailedIds.remove(id);
+      isTranscribing.value = true;
+      final bytes = await file.readAsBytes();
+      final text = await _aiService.transcribeAudioBytes(bytes);
+      transcribingIds.remove(id);
+      isTranscribing.value = false;
+
+      if (text.trim().isEmpty) {
+        transcriptionFailedIds.add(id);
+        Get.snackbar('Transcription', 'No speech detected');
+        return;
+      }
+
+      final index = voiceNotes.indexWhere((note) => note.id == id);
+      if (index == -1) {
+        return;
+      }
+      final updated = voiceNotes[index].copyWith(transcript: text.trim());
+      await _databaseService.updateVoiceNote(updated);
+      voiceNotes[index] = updated;
+      Get.snackbar('Success', 'Transcription ready');
+    } catch (e) {
+      transcribingIds.remove(id);
+      transcriptionFailedIds.add(id);
+      isTranscribing.value = false;
+      print('Error transcribing audio: $e');
+      Get.snackbar('Transcription', 'Failed to transcribe recording');
+    }
+  }
+
+  Future<void> retryTranscription(int index) async {
+    final note = voiceNotes[index];
+    if (note.filePath.isEmpty) {
+      Get.snackbar('Transcription', 'Audio file not found');
+      return;
+    }
+    await _transcribeSavedAudio(note.id, note.filePath);
+  }
+
+  void _cacheFileSize(VoiceNote note) {
+    if (note.filePath.isEmpty) return;
+    final file = File(note.filePath);
+    file.exists().then((exists) async {
+      if (!exists) return;
+      final size = await file.length();
+      fileSizes[note.id] = size;
+    });
+  }
+
+  Future<bool> _startAudioRecording() async {
+    try {
+      final hasPermission = await _recorder.hasPermission();
+      if (!hasPermission) {
+        return false;
+      }
+      final directory = await getApplicationDocumentsDirectory();
+      final folder = Directory(path.join(directory.path, 'voice_notes'));
+      if (!await folder.exists()) {
+        await folder.create(recursive: true);
+      }
+      final id = _currentRecordingId ??
+          DateTime.now().millisecondsSinceEpoch.toString();
+      final filePath = path.join(folder.path, '$id.m4a');
+      await _recorder.start(
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          bitRate: 128000,
+          sampleRate: 44100,
+          numChannels: 1,
+          androidConfig: AndroidRecordConfig(
+            manageBluetooth: false,
+            audioSource: AndroidAudioSource.mic,
+          ),
+        ),
+        path: filePath,
+      );
+      _currentFilePath = filePath;
+      _startLevelTimer();
+      return true;
+    } catch (e) {
+      print('Error starting audio recording: $e');
+      return false;
+    }
+  }
+
+  Future<void> _stopAudioRecording() async {
+    try {
+      final recording = await _recorder.isRecording();
+      if (!recording) return;
+      final stoppedPath = await _recorder.stop();
+      if (stoppedPath != null && stoppedPath.isNotEmpty) {
+        _currentFilePath = stoppedPath;
+      }
+    } catch (e) {
+      print('Error stopping audio recording: $e');
+    }
+  }
+
+  void _startLevelTimer() {
+    _levelTimer?.cancel();
+    _levelTimer = Timer.periodic(const Duration(milliseconds: 250), (_) async {
+      if (!isRecording.value) return;
+      try {
+        final amp = await _recorder.getAmplitude();
+        final normalized = ((amp.current + 60) / 60).clamp(0.0, 1.0);
+        audioLevel.value = normalized;
+      } catch (_) {
+        // ignore amplitude errors
+      }
+    });
+  }
+
+  void _stopLevelTimer() {
+    _levelTimer?.cancel();
+    _levelTimer = null;
+    audioLevel.value = 0.0;
   }
 
   Future<void> _startTranscription() async {
@@ -179,7 +382,7 @@ class VoiceNotesController extends GetxController {
         print('VoiceNotes STT status: $status');
         if (status == 'notListening' || status == 'done') {
           if (isRecording.value) {
-            stopRecording();
+            _restartLiveTranscription();
             return;
           }
           isTranscribing.value = false;
@@ -188,7 +391,7 @@ class VoiceNotesController extends GetxController {
       onError: (error) {
         print('VoiceNotes STT error: $error');
         if (isRecording.value) {
-          stopRecording();
+          _restartLiveTranscription();
           return;
         }
         isTranscribing.value = false;
@@ -353,6 +556,8 @@ class VoiceNotesController extends GetxController {
   void onClose() {
     _audioPlayer.dispose();
     _speechToText.cancel();
+    _recorder.dispose();
+    _levelTimer?.cancel();
     super.onClose();
   }
 }
