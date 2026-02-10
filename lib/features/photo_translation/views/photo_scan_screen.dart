@@ -3,7 +3,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/text_styles.dart';
 import '../controllers/photo_translation_controller.dart';
 import 'language_picker_sheet.dart';
 import '../../../core/services/permission_service.dart';
@@ -20,6 +19,7 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
   CameraController? _cameraController;
   Future<void>? _initFuture;
   late AnimationController _scanController;
+  String? _cameraError;
 
   PhotoTranslationController get controller =>
       Get.find<PhotoTranslationController>();
@@ -35,41 +35,58 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
   }
 
   Future<void> _initCamera() async {
-    final granted = await PermissionService.requestCamera();
-    if (!granted) {
-      if (mounted) {
-        Get.snackbar('Permission', 'Camera permission is required');
-        Get.back();
+    try {
+      _cameraError = null;
+      final granted = await PermissionService.requestCamera();
+      if (!granted) {
+        if (mounted) {
+          Get.snackbar('Permission', 'Camera permission is required');
+          Get.back();
+        }
+        return;
       }
-      return;
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        setState(() {
+          _cameraError = 'No camera available on this device.';
+        });
+        return;
+      }
+      final back = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+      _cameraController = CameraController(
+        back,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+      _initFuture = _cameraController!.initialize();
+      setState(() {});
+    } catch (_) {
+      setState(() {
+        _cameraError = 'Failed to initialize camera.';
+      });
     }
-    final cameras = await availableCameras();
-    final back = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
-    _cameraController = CameraController(
-      back,
-      ResolutionPreset.medium,
-      enableAudio: false,
-    );
-    _initFuture = _cameraController!.initialize();
-    setState(() {});
   }
 
   Future<void> _captureAndScan() async {
     if (_cameraController == null) return;
     if (controller.isProcessing.value || controller.isTranslating.value) return;
 
-    await _initFuture;
+    if (_initFuture == null) return;
     _scanController.repeat();
-
-    final file = await _cameraController!.takePicture();
-    await controller.processCapturedImage(File(file.path));
-
-    _scanController.stop();
-    if (mounted) {
-      Get.back();
+    try {
+      await _initFuture;
+      final file = await _cameraController!.takePicture();
+      await controller.processCapturedImage(File(file.path));
+      if (mounted) {
+        Get.back();
+      }
+    } finally {
+      if (_scanController.isAnimating) {
+        _scanController.stop();
+      }
     }
   }
 
@@ -89,13 +106,15 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
           final isProcessing = controller.isProcessing.value;
           final isTranslating = controller.isTranslating.value;
           final showSweep = isProcessing || isTranslating;
+          final scanMessage =
+              isTranslating ? 'Translating text...' : 'Reading text...';
 
           return Stack(
             children: [
               _buildCameraPreview(),
               _buildTopBar(),
               if (showSweep) _buildScanSweep(),
-              if (showSweep) _buildScanOverlay(),
+              if (showSweep) _buildScanOverlay(scanMessage),
               _buildShutterBar(),
             ],
           );
@@ -105,6 +124,9 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
   }
 
   Widget _buildCameraPreview() {
+    if (_cameraError != null) {
+      return _buildCameraError();
+    }
     if (_cameraController == null || _initFuture == null) {
       return const Center(
         child: CircularProgressIndicator(color: Colors.white),
@@ -113,6 +135,14 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
     return FutureBuilder(
       future: _initFuture,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Failed to start camera.',
+              style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+            ),
+          );
+        }
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(
             child: CircularProgressIndicator(color: Colors.white),
@@ -120,6 +150,65 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
         }
         return CameraPreview(_cameraController!);
       },
+    );
+  }
+
+  Widget _buildCameraError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.camera_alt_outlined,
+                color: Colors.white70, size: 48),
+            const SizedBox(height: 12),
+            Text(
+              _cameraError ?? 'Camera unavailable.',
+              style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: Text(
+                    'Close',
+                    style: GoogleFonts.poppins(color: Colors.white70),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _cameraError = null;
+                      _initFuture = null;
+                    });
+                    _initCamera();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00FFB3),
+                    foregroundColor: Colors.black,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  child: Text(
+                    'Retry',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -250,25 +339,47 @@ class _PhotoScanScreenState extends State<PhotoScanScreen>
     );
   }
 
-  Widget _buildScanOverlay() {
+  Widget _buildScanOverlay(String message) {
     return Positioned.fill(
-      child: Container(
-        color: Colors.black.withOpacity(0.35),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(color: Colors.white),
-              const SizedBox(height: 12),
-              Text(
-                'Scanning...',
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+      child: AbsorbPointer(
+        child: Container(
+          color: Colors.black.withOpacity(0.4),
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.55),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withOpacity(0.15)),
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(
+                    color: Color(0xFF00FFB3),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    message,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Hold still for best results',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

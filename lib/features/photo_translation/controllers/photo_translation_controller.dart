@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'dart:ui';
 import 'package:get/get.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,14 +9,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../../../core/services/permission_service.dart';
 import '../../../core/constants/languages.dart';
-import 'package:image/image.dart' as img;
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 class PhotoTranslationController extends GetxController {
   final ImagePicker _picker = ImagePicker();
-  final TextRecognizer _textRecognizer =
-      TextRecognizer(script: TextRecognitionScript.latin);
+  TextRecognizer? _textRecognizer;
+  TextRecognitionScript _currentScript = TextRecognitionScript.latin;
   final GoogleTranslator _translator = GoogleTranslator();
 
   Rx<File?> imageFile = Rx<File?>(null);
@@ -36,30 +32,6 @@ class PhotoTranslationController extends GetxController {
 
   final List<Map<String, String>> supportedLanguages =
       SupportedLanguages.listNoLocale;
-
-  Future<void> scanImage() async {
-    try {
-      errorMessage.value = '';
-      recognizedText.value = '';
-      translatedText.value = '';
-      translationError.value = '';
-
-      final granted = await PermissionService.requestCamera();
-      if (!granted) {
-        errorMessage.value = 'Camera permission is required';
-        return;
-      }
-
-      final picked =
-          await _picker.pickImage(source: ImageSource.camera, imageQuality: 90);
-      if (picked == null) return;
-
-      imageFile.value = File(picked.path);
-      await _runOcr(imageFile.value!);
-    } catch (e) {
-      errorMessage.value = 'Failed to scan image';
-    }
-  }
 
   Future<void> processCapturedImage(File file) async {
     try {
@@ -103,8 +75,9 @@ class PhotoTranslationController extends GetxController {
   Future<void> _runOcr(File file, {bool allowRecrop = true}) async {
     try {
       isProcessing.value = true;
+      _ensureTextRecognizer();
       final inputImage = InputImage.fromFile(file);
-      final result = await _textRecognizer.processImage(inputImage);
+      final result = await _textRecognizer!.processImage(inputImage);
       recognizedText.value = result.text.trim();
       ocrBlocks.clear();
       for (final block in result.blocks) {
@@ -169,18 +142,24 @@ class PhotoTranslationController extends GetxController {
     final fromLang = detectedLanguageCode.value == 'unknown'
         ? 'auto'
         : detectedLanguageCode.value;
-    for (final block in ocrBlocks) {
-      if (block.text.isEmpty) continue;
-      try {
-        final translated = await _translator.translate(
-          block.text,
-          from: fromLang,
-          to: selectedTargetLanguage.value,
-        );
-        block.translated = translated.text.trim();
-      } catch (_) {
-        block.translated = block.text;
-      }
+    const int maxConcurrent = 3;
+    var index = 0;
+    while (index < ocrBlocks.length) {
+      final slice = ocrBlocks.skip(index).take(maxConcurrent).toList();
+      await Future.wait(slice.map((block) async {
+        if (block.text.isEmpty) return;
+        try {
+          final translated = await _translator.translate(
+            block.text,
+            from: fromLang,
+            to: selectedTargetLanguage.value,
+          );
+          block.translated = translated.text.trim();
+        } catch (_) {
+          block.translated = block.text;
+        }
+      }));
+      index += maxConcurrent;
     }
     ocrBlocks.refresh();
   }
@@ -201,6 +180,42 @@ class PhotoTranslationController extends GetxController {
     }
     return null;
   }
+
+  void _ensureTextRecognizer() {
+    final script = _scriptForLanguageCode(
+      detectedLanguageCode.value == 'unknown'
+          ? selectedTargetLanguage.value
+          : detectedLanguageCode.value,
+    );
+    if (_textRecognizer != null && _currentScript == script) return;
+    _textRecognizer?.close();
+    _currentScript = script;
+    _textRecognizer = TextRecognizer(script: script);
+  }
+
+  TextRecognitionScript _scriptForLanguageCode(String code) {
+    final normalized = code.toLowerCase();
+    if (_kChinese.contains(normalized)) return TextRecognitionScript.chinese;
+    if (_kJapanese.contains(normalized)) return TextRecognitionScript.japanese;
+    if (_kKorean.contains(normalized)) return TextRecognitionScript.korean;
+    if (_kDevanagari.contains(normalized)) {
+      return TextRecognitionScript.devanagari;
+    }
+    return TextRecognitionScript.latin;
+  }
+
+  static const Set<String> _kChinese = {
+    'zh',
+    'zh-cn',
+    'zh-hans',
+    'zh-sg',
+    'zh-tw',
+    'zh-hant',
+    'zh-hk',
+  };
+  static const Set<String> _kJapanese = {'ja'};
+  static const Set<String> _kKorean = {'ko'};
+  static const Set<String> _kDevanagari = {'hi', 'mr', 'ne'};
 
   Future<ui.Size> _decodeImageSize(File file) async {
     final bytes = await file.readAsBytes();
@@ -261,14 +276,14 @@ class PhotoTranslationController extends GetxController {
 
   @override
   void onClose() {
-    _textRecognizer.close();
+    _textRecognizer?.close();
     super.onClose();
   }
 }
 
 class OcrBlock {
   OcrBlock({required this.rect, required this.text, this.translated = ''});
-  final Rect rect;
+  final ui.Rect rect;
   final String text;
   String translated;
 }
