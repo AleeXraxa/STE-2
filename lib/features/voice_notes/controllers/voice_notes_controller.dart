@@ -23,6 +23,10 @@ class VoiceNotesController extends GetxController {
   String? _currentFilePath;
   String? _currentRecordingId;
   double _lastSoundLevel = 0.0;
+  bool _restartTranscription = false;
+  String _transcriptBuffer = '';
+  bool _speechReady = false;
+  bool _speechInitializing = false;
 
   @override
   void onInit() {
@@ -66,64 +70,15 @@ class VoiceNotesController extends GetxController {
 
     // Initialize speech-to-text for live transcript
     liveTranscript.value = '';
+    _transcriptBuffer = '';
     isTranscribing.value = false;
-    try {
-      if (_speechToText.isListening) {
-        await _speechToText.stop();
-      }
-      await _speechToText.cancel();
-
-      final available = await _speechToText.initialize(
-        onStatus: (status) {
-          print('VoiceNotes STT status: $status');
-          if (status == 'notListening' || status == 'done') {
-            isTranscribing.value = false;
-          }
-        },
-        onError: (error) {
-          print('VoiceNotes STT error: $error');
-          isTranscribing.value = false;
-        },
-      );
-      if (available) {
-        final systemLocale = await _speechToText.systemLocale();
-        final localeId = systemLocale?.localeId;
-        print('VoiceNotes STT locale: $localeId');
-        isTranscribing.value = true;
-        await _speechToText.listen(
-          partialResults: true,
-          listenMode: ListenMode.dictation,
-          localeId: localeId,
-          listenFor: const Duration(minutes: 2),
-          pauseFor: const Duration(seconds: 3),
-          cancelOnError: false,
-          onSoundLevelChange: (level) {
-            _lastSoundLevel = level;
-            if (level > -1.0) {
-              print('VoiceNotes STT sound: $level');
-            }
-          },
-          onResult: (result) {
-            if (result.recognizedWords.isNotEmpty) {
-              liveTranscript.value = result.recognizedWords;
-            }
-          },
-        );
-      } else {
-        Get.snackbar('Speech Recognition', 'Speech engine not available');
-        return;
-      }
-    } catch (_) {
-      isTranscribing.value = false;
-      Get.snackbar('Speech Recognition', 'Failed to start listening');
-      return;
-    }
+    await _startTranscription();
 
     isRecording.value = true;
     recordingDuration.value = 0;
 
     _currentRecordingId = DateTime.now().millisecondsSinceEpoch.toString();
-    _currentFilePath = '';
+    _currentFilePath = null;
 
     // Start duration timer
     _startDurationTimer();
@@ -144,10 +99,15 @@ class VoiceNotesController extends GetxController {
       await _speechToText.stop();
     }
     await _speechToText.cancel();
+    _speechReady = false;
+    _speechInitializing = false;
     isTranscribing.value = false;
 
+    _finalizeTranscript();
+
     // Create a new voice note
-    final id = _currentRecordingId ?? DateTime.now().millisecondsSinceEpoch.toString();
+    final id =
+        _currentRecordingId ?? DateTime.now().millisecondsSinceEpoch.toString();
     final transcript = liveTranscript.value.trim();
     final title = transcript.isNotEmpty
         ? (transcript.length > 40
@@ -156,10 +116,20 @@ class VoiceNotesController extends GetxController {
         : _formatDateTime(DateTime.now());
     final filePath = _currentFilePath ?? '';
 
+    if (transcript.isEmpty && filePath.isEmpty) {
+      Get.snackbar('Recording', 'Nothing recorded');
+      recordingDuration.value = 0;
+      _currentFilePath = null;
+      _currentRecordingId = null;
+      liveTranscript.value = '';
+      return;
+    }
+
     final newNote = VoiceNote(
       id: id,
       title: title,
       filePath: filePath,
+      transcript: transcript,
       createdAt: DateTime.now(),
       duration: recordingDuration.value,
     );
@@ -177,6 +147,124 @@ class VoiceNotesController extends GetxController {
     _currentFilePath = null;
     _currentRecordingId = null;
     liveTranscript.value = '';
+    _transcriptBuffer = '';
+  }
+
+  Future<void> _startTranscription() async {
+    try {
+      await _listenForTranscription();
+    } catch (_) {
+      isTranscribing.value = false;
+      Get.snackbar('Speech Recognition', 'Failed to start listening');
+    }
+  }
+
+  void _restartLiveTranscription() {
+    if (_restartTranscription || !isRecording.value) return;
+    _restartTranscription = true;
+    Future.delayed(const Duration(milliseconds: 300), () async {
+      _restartTranscription = false;
+      if (isRecording.value) {
+        await _listenForTranscription();
+      }
+    });
+  }
+
+  Future<bool> _ensureSpeechReady() async {
+    if (_speechReady) return true;
+    if (_speechInitializing) return false;
+    _speechInitializing = true;
+    final available = await _speechToText.initialize(
+      onStatus: (status) {
+        print('VoiceNotes STT status: $status');
+        if (status == 'notListening' || status == 'done') {
+          if (isRecording.value) {
+            stopRecording();
+            return;
+          }
+          isTranscribing.value = false;
+        }
+      },
+      onError: (error) {
+        print('VoiceNotes STT error: $error');
+        if (isRecording.value) {
+          stopRecording();
+          return;
+        }
+        isTranscribing.value = false;
+      },
+    );
+    _speechInitializing = false;
+    _speechReady = available;
+    if (!available) {
+      Get.snackbar('Speech Recognition', 'Speech engine not available');
+    }
+    return available;
+  }
+
+  Future<void> _listenForTranscription() async {
+    if (!await _ensureSpeechReady()) return;
+    if (_speechToText.isListening) {
+      await _speechToText.stop();
+    }
+    final systemLocale = await _speechToText.systemLocale();
+    final localeId = systemLocale?.localeId;
+    print('VoiceNotes STT locale: $localeId');
+    isTranscribing.value = true;
+    await _speechToText.listen(
+      partialResults: true,
+      listenMode: ListenMode.dictation,
+      localeId: localeId,
+      listenFor: const Duration(minutes: 30),
+      pauseFor: const Duration(seconds: 5),
+      cancelOnError: false,
+      onSoundLevelChange: (level) {
+        _lastSoundLevel = level;
+        if (level > -1.0) {
+          print('VoiceNotes STT sound: $level');
+        }
+      },
+      onResult: (result) {
+        final words = result.recognizedWords.trim();
+        if (words.isEmpty) return;
+        if (result.finalResult) {
+          if (_transcriptBuffer.isEmpty) {
+            _transcriptBuffer = words;
+          } else {
+            _transcriptBuffer = '$_transcriptBuffer\n$words';
+          }
+          liveTranscript.value = _transcriptBuffer;
+        } else {
+          if (_transcriptBuffer.isEmpty) {
+            liveTranscript.value = words;
+          } else {
+            liveTranscript.value = '$_transcriptBuffer\n$words';
+          }
+        }
+      },
+    );
+  }
+
+  void _finalizeTranscript() {
+    final current = liveTranscript.value.trim();
+    if (current.isEmpty) return;
+    final buffer = _transcriptBuffer.trim();
+    if (buffer.isEmpty) {
+      _transcriptBuffer = current;
+      liveTranscript.value = _transcriptBuffer;
+      return;
+    }
+    if (current != buffer) {
+      if (current.startsWith(buffer)) {
+        final suffix = current.substring(buffer.length).trim();
+        if (suffix.isNotEmpty) {
+          _transcriptBuffer = '$buffer\n$suffix';
+        }
+      } else {
+        _transcriptBuffer = '$buffer\n$current';
+      }
+      liveTranscript.value = _transcriptBuffer;
+    }
   }
 
   Future<void> playVoiceNote(int index) async {
@@ -196,7 +284,7 @@ class VoiceNotesController extends GetxController {
 
       final note = voiceNotes[index];
       if (note.filePath.isEmpty) {
-        Get.snackbar('Playback', 'No audio saved in live transcript mode');
+        Get.snackbar('Playback', 'No audio saved for this note');
         currentPlayingIndex.value = -1;
         isPlaying.value = false;
         return;
@@ -248,7 +336,11 @@ class VoiceNotesController extends GetxController {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    return 'Note ${dateTime.month}/${dateTime.day} ${dateTime.hour}:${dateTime.minute}';
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return 'Note $month/$day $hour:$minute';
   }
 
   String formatDuration(int seconds) {

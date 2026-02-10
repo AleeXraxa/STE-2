@@ -7,6 +7,7 @@ import '../features/assistant/bindings/assistant_binding.dart';
 import '../features/free_talk/views/free_talk_screen.dart';
 import '../features/free_talk/bindings/free_talk_binding.dart';
 import '../features/voice_notes/views/voice_notes_screen.dart';
+import '../features/voice_notes/bindings/voice_notes_binding.dart';
 import '../features/photo_translation/views/photo_translation_screen.dart';
 import '../features/headphone_phone/views/headphone_phone_screen.dart';
 import '../splash_screen.dart';
@@ -34,7 +35,10 @@ class AppRoutes {
         binding: AssistantBinding()),
     GetPage(
         name: freeTalk, page: () => FreeTalkScreen(), binding: FreeTalkBinding()),
-    GetPage(name: voiceNotes, page: () => VoiceNotesScreen()),
+    GetPage(
+        name: voiceNotes,
+        page: () => VoiceNotesScreen(),
+        binding: VoiceNotesBinding()),
     GetPage(name: photoTranslation, page: () => PhotoTranslationScreen()),
     GetPage(name: headphonePhone, page: () => HeadphonePhoneScreen()),
   ];

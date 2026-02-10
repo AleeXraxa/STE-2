@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/text_styles.dart';
 import '../controllers/voice_notes_controller.dart';
+import '../models/voice_note.dart';
 
 class VoiceNotesScreen extends StatefulWidget {
   @override
@@ -19,7 +20,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
   @override
   void initState() {
     super.initState();
-    controller = Get.put(VoiceNotesController());
+    controller = Get.find<VoiceNotesController>();
     _initializeAnimations();
   }
 
@@ -53,83 +54,87 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
     super.dispose();
   }
 
-  void _showRenameDialog(int index) {
-    final TextEditingController textController = TextEditingController(
-      text: controller.voiceNotes[index].title,
-    );
+  String _formatItemIndex(int value) {
+    return value.toString().padLeft(2, '0');
+  }
 
-    showDialog(
+  void _showTranscriptSheet(VoiceNote note) {
+    final transcript = note.transcript.trim();
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFFF8FAFC),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Rename Voice Note',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-        ),
-        content: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: textController,
-            decoration: InputDecoration(
-              hintText: 'Enter new title',
-              hintStyle: TextStyle(color: Colors.grey[600]),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Transcript',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.6,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFFFFF), Color(0xFFF1F5F9)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 18,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      transcript.isEmpty ? 'No transcript saved.' : transcript,
+                      style: AppTextStyles.body.copyWith(
+                        color: const Color(0xFF0F172A),
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            style: GoogleFonts.poppins(color: Colors.black),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              if (textController.text.trim().isNotEmpty) {
-                controller.renameVoiceNote(index, textController.text.trim());
-              }
-              Navigator.pop(context);
-            },
-            child: Text(
-              'Save',
-              style: GoogleFonts.poppins(
-                color: Color(0xFF0F172A),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -339,7 +344,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   ),
                 ),
                 title: Text(
-                  note.title,
+                  'Audio ${_formatItemIndex(index + 1)}',
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -368,16 +373,31 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: Icon(Icons.edit, color: Color(0xFF0F172A)),
-                      onPressed: () => _showRenameDialog(index),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => controller.deleteVoiceNote(index),
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFFFEE2E2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Color(0xFFDC2626),
+                        ),
+                        onPressed: () => controller.deleteVoiceNote(index),
+                      ),
                     ),
                   ],
                 ),
+                onTap: () => _showTranscriptSheet(note),
               ),
             );
           },

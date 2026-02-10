@@ -23,8 +23,9 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDatabase,
+      onUpgrade: _upgradeDatabase,
     );
   }
 
@@ -34,11 +35,20 @@ class DatabaseService {
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         file_path TEXT NOT NULL,
+        transcript TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL,
         duration INTEGER NOT NULL DEFAULT 0,
         is_playing INTEGER NOT NULL DEFAULT 0
       )
     ''');
+  }
+
+  Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 3) {
+      await db.execute(
+        'ALTER TABLE voice_notes ADD COLUMN transcript TEXT NOT NULL DEFAULT \'\'',
+      );
+    }
   }
 
   Future<int> insertVoiceNote(VoiceNote voiceNote) async {
@@ -49,6 +59,7 @@ class DatabaseService {
         'id': voiceNote.id,
         'title': voiceNote.title,
         'file_path': voiceNote.filePath,
+        'transcript': voiceNote.transcript,
         'created_at': voiceNote.createdAt.toIso8601String(),
         'duration': voiceNote.duration,
         'is_playing': voiceNote.isPlaying ? 1 : 0,
@@ -66,6 +77,7 @@ class DatabaseService {
         id: maps[i]['id'],
         title: maps[i]['title'],
         filePath: maps[i]['file_path'],
+        transcript: maps[i]['transcript'] ?? '',
         createdAt: DateTime.parse(maps[i]['created_at']),
         duration: maps[i]['duration'],
         isPlaying: maps[i]['is_playing'] == 1,
@@ -80,6 +92,7 @@ class DatabaseService {
       {
         'title': voiceNote.title,
         'file_path': voiceNote.filePath,
+        'transcript': voiceNote.transcript,
         'created_at': voiceNote.createdAt.toIso8601String(),
         'duration': voiceNote.duration,
         'is_playing': voiceNote.isPlaying ? 1 : 0,
