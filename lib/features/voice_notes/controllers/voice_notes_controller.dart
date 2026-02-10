@@ -31,6 +31,7 @@ class VoiceNotesController extends GetxController {
   RxSet<String> transcribingIds = <String>{}.obs;
   RxSet<String> transcriptionFailedIds = <String>{}.obs;
   RxMap<String, int> fileSizes = <String, int>{}.obs;
+  RxString selectedLanguage = 'English'.obs;
 
   // Current recording state
   String? _currentFilePath;
@@ -238,7 +239,9 @@ class VoiceNotesController extends GetxController {
       transcriptionFailedIds.remove(id);
       isTranscribing.value = true;
       final bytes = await file.readAsBytes();
-      final text = await _aiService.transcribeAudioBytes(bytes);
+      final code = _languageCodeFor(selectedLanguage.value);
+      final text =
+          await _aiService.transcribeAudioBytes(bytes, language: code);
       transcribingIds.remove(id);
       isTranscribing.value = false;
 
@@ -272,6 +275,27 @@ class VoiceNotesController extends GetxController {
       return;
     }
     await _transcribeSavedAudio(note.id, note.filePath);
+  }
+
+  String? _languageCodeFor(String language) {
+    switch (language.trim().toLowerCase()) {
+      case 'english':
+        return 'en';
+      case 'urdu':
+        return 'ur';
+      case 'hindi':
+        return 'hi';
+      case 'arabic':
+        return 'ar';
+      case 'spanish':
+        return 'es';
+      case 'french':
+        return 'fr';
+      case 'german':
+        return 'de';
+      default:
+        return null;
+    }
   }
 
   void _cacheFileSize(VoiceNote note) {

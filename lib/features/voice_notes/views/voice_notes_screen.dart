@@ -61,6 +61,79 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
     return value.toString().padLeft(2, '0');
   }
 
+  Future<void> _selectRecordingLanguageAndStart() async {
+    final languages = [
+      'English',
+      'Urdu',
+      'Hindi',
+      'Arabic',
+      'Spanish',
+      'French',
+      'German',
+    ];
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Select Recording Language',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...languages.map(
+                  (lang) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      lang,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    trailing: lang == controller.selectedLanguage.value
+                        ? const Icon(Icons.check, color: Color(0xFF0F172A))
+                        : null,
+                    onTap: () => Navigator.of(context).pop(lang),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (selected == null) return;
+    controller.selectedLanguage.value = selected;
+    await controller.startRecording();
+  }
+
   void _showTranscriptSheet(VoiceNote note) {
     final transcript = note.transcript.trim();
     final aiService = AIService();
@@ -988,7 +1061,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                       return ElevatedButton.icon(
                         onPressed: controller.isCountingDown.value
                             ? null
-                            : controller.startRecording,
+                            : _selectRecordingLanguageAndStart,
                         icon: const Icon(
                           Icons.mic,
                           color: Colors.white,
