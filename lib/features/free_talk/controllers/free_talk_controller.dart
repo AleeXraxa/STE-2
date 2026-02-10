@@ -175,17 +175,12 @@ class FreeTalkController extends GetxController {
         orElse: () => {'locale': 'en_US'})['locale']!;
     _currentListenLanguage = listenLang;
     _nextListenLanguage = null;
-    print(
-        '[FreeTalk] START listen locale=$locale lang=$_currentListenLanguage');
 
     await _speechToText.listen(
       onResult: (result) async {
-        print(
-            '[FreeTalk] RESULT final=${result.finalResult} confidence=${result.hasConfidenceRating ? result.confidence : 'n/a'} words="${result.recognizedWords}"');
         if (result.finalResult && result.recognizedWords.isNotEmpty) {
           if (!_localeRetry &&
               _shouldRetryWithOtherLocale(result.recognizedWords)) {
-            print('[FreeTalk] Retry with other locale (script mismatch)');
             _localeRetry = true;
             lastDetectedLanguage.value =
                 lastDetectedLanguage.value == languageA.value
@@ -200,7 +195,6 @@ class FreeTalkController extends GetxController {
               result.confidence < 0.6 &&
               (lastDetectedLanguage.value == languageA.value ||
                   lastDetectedLanguage.value == languageB.value)) {
-            print('[FreeTalk] Retry with other locale (low confidence)');
             _localeRetry = true;
             lastDetectedLanguage.value =
                 lastDetectedLanguage.value == languageA.value
@@ -223,17 +217,10 @@ class FreeTalkController extends GetxController {
     if (_isProcessing) return;
     _isProcessing = true;
     isProcessing.value = true;
-    print('[FreeTalk] TRANSCRIPT="$speech"');
     _lastTranscript = speech;
     _lastTextScript = _detectScript(speech);
-    if (_lastTextScript != null) {
-      print('[FreeTalk] SCRIPT=$_lastTextScript');
-    }
     // Detect language
-    print(
-        '[FreeTalk] DETECT start (A=${languageA.value}, B=${languageB.value}, last=${lastDetectedLanguage.value})');
     String detectedLang = await _detectLanguage(speech);
-    print('[FreeTalk] DETECT result=$detectedLang');
 
     // If not one of the two languages, use inference or last detected
     if (!_matchesLanguageCode(detectedLang, languageA.value) &&
@@ -250,7 +237,6 @@ class FreeTalkController extends GetxController {
     }
     detectedLang = _normalizeToSelected(detectedLang, languageA.value,
         languageB.value, lastDetectedLanguage.value);
-    print('[FreeTalk] DETECT normalized=$detectedLang');
 
     lastDetectedLanguage.value = detectedLang;
 
@@ -271,7 +257,6 @@ class FreeTalkController extends GetxController {
     // Determine target language
     String targetLang =
         (detectedLang == languageA.value) ? languageB.value : languageA.value;
-    print('[FreeTalk] TRANSLATE from=$detectedLang to=$targetLang');
 
     // Translate
     try {

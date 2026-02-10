@@ -20,7 +20,7 @@ class _TranslationScreenState extends State<TranslationScreen>
   @override
   void initState() {
     super.initState();
-    controller = Get.put(TranslationController());
+    controller = Get.find<TranslationController>();
     _initializeAnimations();
   }
 
@@ -391,6 +391,32 @@ class _TranslationScreenState extends State<TranslationScreen>
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           _scrollToBottom();
                         });
+                        if (messages.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.translate,
+                                    size: 56, color: Color(0xFF94A3B8)),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Start speaking to translate',
+                                  style: AppTextStyles.heading.copyWith(
+                                    fontSize: 18,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Tap one of the mic buttons below',
+                                  style: AppTextStyles.body.copyWith(
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
                         return ListView.builder(
                           controller: _scrollController,
                           itemCount: messages.length,

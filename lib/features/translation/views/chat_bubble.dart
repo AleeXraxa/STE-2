@@ -25,22 +25,13 @@ class ChatBubble extends StatelessWidget {
           child: GestureDetector(
             onTap: controller.isSelectionMode.value
                 ? () {
-                    if (controller.selectedMessages.contains(index)) {
-                      controller.selectedMessages.remove(index);
+                    if (controller.selectedMessages.contains(message)) {
+                      controller.selectedMessages.remove(message);
                     } else {
-                      controller.selectedMessages.add(index);
+                      controller.selectedMessages.add(message);
                     }
                   }
-                : () {
-                    // Add interactive feedback
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Message tapped'),
-                        duration: Duration(seconds: 1),
-                        backgroundColor: Color(0xFF003049),
-                      ),
-                    );
-                  },
+                : null,
             child: Container(
               margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
               padding: EdgeInsets.all(10),
@@ -62,12 +53,12 @@ class ChatBubble extends StatelessWidget {
                 children: [
                   if (controller.isSelectionMode.value)
                     Checkbox(
-                      value: controller.selectedMessages.contains(index),
+                      value: controller.selectedMessages.contains(message),
                       onChanged: (value) {
                         if (value == true) {
-                          controller.selectedMessages.add(index);
+                          controller.selectedMessages.add(message);
                         } else {
-                          controller.selectedMessages.remove(index);
+                          controller.selectedMessages.remove(message);
                         }
                       },
                       activeColor:

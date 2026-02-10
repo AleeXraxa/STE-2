@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:translator/translator.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../../core/constants/languages.dart';
+import '../../../core/services/permission_service.dart';
 import '../models/message.dart';
 
 class TranslationController extends GetxController {
@@ -22,7 +22,8 @@ class TranslationController extends GetxController {
   var chatMessages = <Message>[].obs;
   var playingIndex = (-1).obs;
   var isSelectionMode = false.obs;
-  var selectedMessages = <int>{}.obs;
+  var selectedMessages = <Message>{}.obs;
+  var speechAvailable = false.obs;
 
   // Search functionality
   var searchQuery = ''.obs;
@@ -33,7 +34,6 @@ class TranslationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    requestMicrophonePermission();
     _initializeSpeech();
     tts.setCompletionHandler(() {
       playingIndex.value = -1;
@@ -43,29 +43,34 @@ class TranslationController extends GetxController {
   }
 
   Future<void> _initializeSpeech() async {
-    await _speechToText.initialize(
-      onStatus: (status) => print('Speech status: $status'),
-      onError: (error) => print('Speech error: $error'),
+    final available = await _speechToText.initialize(
+      onStatus: (status) {
+        if (status == 'notListening' || status == 'done') {
+          if (isListeningSource.value || isListeningTarget.value) {
+            isListeningSource.value = false;
+            isListeningTarget.value = false;
+          }
+        }
+      },
+      onError: (error) {
+        if (error.errorMsg == 'error_speech_timeout') {
+          isListeningSource.value = false;
+          isListeningTarget.value = false;
+          Get.snackbar('Speech Recognition', 'Voice not detected');
+          return;
+        }
+        if (error.errorMsg == 'error_no_match') {
+          isListeningSource.value = false;
+          isListeningTarget.value = false;
+          Get.snackbar('Speech Recognition', 'No speech detected');
+          return;
+        }
+        isListeningSource.value = false;
+        isListeningTarget.value = false;
+        Get.snackbar('Speech Recognition', 'Error: ${error.errorMsg}');
+      },
     );
-  }
-
-  Future<void> requestMicrophonePermission() async {
-    var status = await Permission.microphone.status;
-    if (!status.isGranted) {
-      status = await Permission.microphone.request();
-      if (status.isGranted) {
-        print("Mic permission granted");
-      } else if (status.isDenied) {
-        print("Mic permission denied");
-        Get.snackbar('Permission Denied',
-            'Microphone permission is required for voice input');
-      } else if (status.isPermanentlyDenied) {
-        print("Mic permission permanently denied");
-        openAppSettings();
-      }
-    } else {
-      print("Mic permission already granted");
-    }
+    speechAvailable.value = available;
   }
 
   Future<void> _addMessage(
@@ -109,6 +114,9 @@ class TranslationController extends GetxController {
     selectedTargetLanguage.value = tempCode;
     selectedTargetLanguageName.value = tempName;
 
+    chatMessages.clear();
+    selectedMessages.clear();
+    isSelectionMode.value = false;
     update();
   }
 
@@ -131,14 +139,23 @@ class TranslationController extends GetxController {
       await stopListeningTarget();
     }
     if (!isListeningSource.value) {
-      bool available = await _speechToText.initialize();
-      if (available) {
+      final micGranted = await PermissionService.requestMicrophone();
+      if (!micGranted) {
+        Get.snackbar('Permission', 'Microphone permission is required');
+        return;
+      }
+      if (speechAvailable.value) {
         isListeningSource.value = true;
         final locale = supportedLanguages.firstWhere(
             (lang) => lang['code'] == selectedSourceLanguage.value)['locale']!;
         await _speechToText.listen(
           onResult: (result) {
             if (result.finalResult) {
+              if (result.recognizedWords.trim().isEmpty) {
+                Get.snackbar('Speech Recognition', 'Voice not detected');
+                stopListeningSource();
+                return;
+              }
               _addMessage(result.recognizedWords, selectedSourceLanguage.value,
                   selectedTargetLanguage.value);
               stopListeningSource();
@@ -164,14 +181,23 @@ class TranslationController extends GetxController {
       await stopListeningSource();
     }
     if (!isListeningTarget.value) {
-      bool available = await _speechToText.initialize();
-      if (available) {
+      final micGranted = await PermissionService.requestMicrophone();
+      if (!micGranted) {
+        Get.snackbar('Permission', 'Microphone permission is required');
+        return;
+      }
+      if (speechAvailable.value) {
         isListeningTarget.value = true;
         final locale = supportedLanguages.firstWhere(
             (lang) => lang['code'] == selectedTargetLanguage.value)['locale']!;
         await _speechToText.listen(
           onResult: (result) {
             if (result.finalResult) {
+              if (result.recognizedWords.trim().isEmpty) {
+                Get.snackbar('Speech Recognition', 'Voice not detected');
+                stopListeningTarget();
+                return;
+              }
               _addMessage(result.recognizedWords, selectedTargetLanguage.value,
                   selectedSourceLanguage.value);
               stopListeningTarget();
@@ -215,12 +241,8 @@ class TranslationController extends GetxController {
 
   void deleteSelectedMessages() {
     // Sort indices in descending order to remove from end
-    final indices = selectedMessages.toList()..sort((a, b) => b.compareTo(a));
-    for (final index in indices) {
-      if (index < chatMessages.length) {
-        chatMessages.removeAt(index);
-      }
-    }
+    final toRemove = selectedMessages.toSet();
+    chatMessages.removeWhere((message) => toRemove.contains(message));
     selectedMessages.clear();
     update();
   }

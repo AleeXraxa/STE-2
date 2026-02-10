@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../features/home/views/home_screen.dart';
 import '../features/translation/views/translation_screen.dart';
+import '../features/translation/bindings/translation_binding.dart';
 import '../features/assistant/views/assistant_screen.dart';
 import '../features/assistant/bindings/assistant_binding.dart';
 import '../features/free_talk/views/free_talk_screen.dart';
@@ -23,7 +24,10 @@ class AppRoutes {
   static final List<GetPage> getPages = [
     GetPage(name: splash, page: () => SplashScreen()),
     GetPage(name: home, page: () => HomeScreen()),
-    GetPage(name: translation, page: () => TranslationScreen()),
+    GetPage(
+        name: translation,
+        page: () => TranslationScreen(),
+        binding: TranslationBinding()),
     GetPage(
         name: assistant,
         page: () => AssistantScreen(),
