@@ -21,7 +21,7 @@ class _FreeTalkScreenState extends State<FreeTalkScreen>
   @override
   void initState() {
     super.initState();
-    controller = Get.put(FreeTalkController());
+    controller = Get.find<FreeTalkController>();
     _initializeAnimations();
   }
 
@@ -429,9 +429,11 @@ class _FreeTalkScreenState extends State<FreeTalkScreen>
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                   child: Obx(() => ElevatedButton.icon(
-                        onPressed: controller.isListening.value
-                            ? controller.stopFreeTalk
-                            : controller.startFreeTalk,
+                        onPressed: controller.isProcessing.value
+                            ? null
+                            : (controller.isListening.value
+                                ? controller.stopFreeTalk
+                                : controller.startFreeTalk),
                         icon: Icon(
                           controller.isListening.value
                               ? Icons.stop
@@ -439,9 +441,11 @@ class _FreeTalkScreenState extends State<FreeTalkScreen>
                           color: Colors.white,
                         ),
                         label: Text(
-                          controller.isListening.value
-                              ? 'Stop'
-                              : 'Start Speaking',
+                          controller.isProcessing.value
+                              ? 'Working...'
+                              : (controller.isListening.value
+                                  ? 'Stop'
+                                  : 'Start Speaking'),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: controller.isListening.value
