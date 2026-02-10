@@ -199,7 +199,7 @@ class PhotoTranslationController extends GetxController {
     if (_kJapanese.contains(normalized)) return TextRecognitionScript.japanese;
     if (_kKorean.contains(normalized)) return TextRecognitionScript.korean;
     if (_kDevanagari.contains(normalized)) {
-      return TextRecognitionScript.devanagari;
+      return TextRecognitionScript.devanagiri;
     }
     return TextRecognitionScript.latin;
   }

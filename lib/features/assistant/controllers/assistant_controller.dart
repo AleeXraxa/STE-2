@@ -17,12 +17,14 @@ class AssistantController extends GetxController {
   RxBool isLoading = false.obs;
   RxInt speakingIndex = (-1).obs;
   RxString errorMessage = ''.obs;
+  RxBool speechAvailable = false.obs;
 
   DateTime _lastRequestAt = DateTime.fromMillisecondsSinceEpoch(0);
   String? _lastUserMessage;
   final int _maxMessageLength = 500;
   final Duration _cooldown = const Duration(seconds: 2);
   bool _speechMessageSent = false;
+  int _activeRequestId = 0;
 
   // Language selection
   var selectedLanguage = 'en'.obs;
@@ -48,7 +50,6 @@ class AssistantController extends GetxController {
     selectedLanguage.value = code;
     selectedLanguageName.value = name;
     _configureTts();
-    update();
   }
 
   void updateSearchQuery(String query) {
@@ -62,11 +63,10 @@ class AssistantController extends GetxController {
               lang['code']!.toLowerCase().contains(query.toLowerCase()))
           .toList();
     }
-    update();
   }
 
   void _initializeSpeech() async {
-    await _speechToText.initialize(
+    final available = await _speechToText.initialize(
       onStatus: (status) {
         if (status == 'notListening') {
           isListening.value = false;
@@ -82,10 +82,16 @@ class AssistantController extends GetxController {
         }
       },
     );
+    speechAvailable.value = available;
   }
 
   void startListening() async {
     if (isLoading.value) return;
+    if (!speechAvailable.value) {
+      Get.snackbar(
+          'Speech Recognition', 'Speech recognition is not available.');
+      return;
+    }
     final micGranted = await PermissionService.requestMicrophone();
     if (!micGranted) {
       Get.snackbar('Permission', 'Microphone permission is required');
@@ -118,6 +124,7 @@ class AssistantController extends GetxController {
   }
 
   void stopListening() {
+    isListening.value = false;
     _speechToText.stop();
     if (livePartialText.value.isNotEmpty) {
       if (!_speechMessageSent) {
@@ -162,8 +169,11 @@ class AssistantController extends GetxController {
 
   void _getAIResponse() async {
     if (isLoading.value) return;
+    _aiService.cancelActive();
     isLoading.value = true;
     errorMessage.value = '';
+    _activeRequestId += 1;
+    final requestId = _activeRequestId;
     try {
       final context = List<ChatMessage>.from(chatMessages);
       final placeholderIndex = chatMessages.length;
@@ -171,6 +181,9 @@ class AssistantController extends GetxController {
 
       String accumulated = '';
       await for (final chunk in _aiService.getAIResponseStream(context)) {
+        if (requestId != _activeRequestId) {
+          break;
+        }
         accumulated += chunk;
         chatMessages[placeholderIndex] = ChatMessage.ai(accumulated);
         update();
@@ -192,13 +205,13 @@ class AssistantController extends GetxController {
   void retryLast() {
     if (_lastUserMessage == null) return;
     if (!_canSend(_lastUserMessage!)) return;
-    chatMessages.add(ChatMessage.user(_lastUserMessage!));
     _getAIResponse();
   }
 
   bool _canSend(String text) {
     if (text.length > _maxMessageLength) {
-      Get.snackbar('Too long', 'Please keep messages under $_maxMessageLength characters.');
+      Get.snackbar('Too long',
+          'Please keep messages under $_maxMessageLength characters.');
       return false;
     }
     final now = DateTime.now();
@@ -223,6 +236,7 @@ class AssistantController extends GetxController {
   void onClose() {
     _speechToText.cancel();
     _flutterTts.stop();
+    _aiService.cancelActive();
     super.onClose();
   }
 }

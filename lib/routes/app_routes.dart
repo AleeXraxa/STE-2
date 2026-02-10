@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../features/home/views/home_screen.dart';
 import '../features/translation/views/translation_screen.dart';
 import '../features/assistant/views/assistant_screen.dart';
+import '../features/assistant/bindings/assistant_binding.dart';
 import '../features/free_talk/views/free_talk_screen.dart';
 import '../features/voice_notes/views/voice_notes_screen.dart';
 import '../features/photo_translation/views/photo_translation_screen.dart';
@@ -22,7 +23,10 @@ class AppRoutes {
     GetPage(name: splash, page: () => SplashScreen()),
     GetPage(name: home, page: () => HomeScreen()),
     GetPage(name: translation, page: () => TranslationScreen()),
-    GetPage(name: assistant, page: () => AssistantScreen()),
+    GetPage(
+        name: assistant,
+        page: () => AssistantScreen(),
+        binding: AssistantBinding()),
     GetPage(name: freeTalk, page: () => FreeTalkScreen()),
     GetPage(name: voiceNotes, page: () => VoiceNotesScreen()),
     GetPage(name: photoTranslation, page: () => PhotoTranslationScreen()),

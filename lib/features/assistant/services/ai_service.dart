@@ -6,6 +6,12 @@ import '../models/chat_message.dart';
 class AIService {
   // Cloudflare Workers AI
   static const String _defaultModel = '@cf/meta/llama-3.1-8b-instruct';
+  http.Client? _activeClient;
+
+  void cancelActive() {
+    _activeClient?.close();
+    _activeClient = null;
+  }
 
   Future<String> getAIResponse(List<ChatMessage> messages) async {
     final accountId = dotenv.env['CLOUDFLARE_ACCOUNT_ID'] ?? '';
@@ -78,38 +84,54 @@ class AIService {
       'stream': true,
     });
 
-    final request = http.Request(
-      'POST',
-      Uri.parse(
-          'https://api.cloudflare.com/client/v4/accounts/$accountId/ai/run/$model'),
-    );
-    request.headers.addAll({
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $apiToken',
-    });
-    request.body = requestBody;
+    final client = http.Client();
+    _activeClient?.close();
+    _activeClient = client;
+    try {
+      final request = http.Request(
+        'POST',
+        Uri.parse(
+            'https://api.cloudflare.com/client/v4/accounts/$accountId/ai/run/$model'),
+      );
+      request.headers.addAll({
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiToken',
+      });
+      request.body = requestBody;
 
-    final streamed = await http.Client().send(request);
-    if (streamed.statusCode != 200) {
-      yield 'Sorry, I\'m having trouble responding right now.';
-      return;
-    }
+      final streamed = await client.send(request);
+      if (streamed.statusCode != 200) {
+        yield 'Sorry, I\'m having trouble responding right now.';
+        return;
+      }
 
-    await for (final chunk in streamed.stream.transform(utf8.decoder)) {
-      for (final line in chunk.split('\n')) {
-        if (!line.startsWith('data:')) continue;
-        final data = line.substring(5).trim();
-        if (data.isEmpty || data == '[DONE]') continue;
-        try {
-          final jsonData = jsonDecode(data);
-          final response =
-              jsonData['result']?['response'] ?? jsonData['response'];
-          if (response is String && response.isNotEmpty) {
-            yield response;
+      var buffer = '';
+      await for (final chunk in streamed.stream.transform(utf8.decoder)) {
+        buffer += chunk;
+        while (true) {
+          final newlineIndex = buffer.indexOf('\n');
+          if (newlineIndex == -1) break;
+          final line = buffer.substring(0, newlineIndex).trimRight();
+          buffer = buffer.substring(newlineIndex + 1);
+          if (!line.startsWith('data:')) continue;
+          final data = line.substring(5).trim();
+          if (data.isEmpty || data == '[DONE]') continue;
+          try {
+            final jsonData = jsonDecode(data);
+            final response =
+                jsonData['result']?['response'] ?? jsonData['response'];
+            if (response is String && response.isNotEmpty) {
+              yield response;
+            }
+          } catch (_) {
+            // ignore malformed chunks
           }
-        } catch (_) {
-          // ignore malformed chunks
         }
+      }
+    } finally {
+      client.close();
+      if (_activeClient == client) {
+        _activeClient = null;
       }
     }
   }

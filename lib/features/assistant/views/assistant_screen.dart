@@ -25,7 +25,7 @@ class _AssistantScreenState extends State<AssistantScreen>
   @override
   void initState() {
     super.initState();
-    controller = Get.put(AssistantController());
+    controller = Get.find<AssistantController>();
     _initializeAnimations();
   }
 
@@ -73,6 +73,7 @@ class _AssistantScreenState extends State<AssistantScreen>
   void dispose() {
     _animationController.dispose();
     _scrollController.dispose();
+    _textController.dispose();
     super.dispose();
   }
 
@@ -141,8 +142,7 @@ class _AssistantScreenState extends State<AssistantScreen>
                         decoration: InputDecoration(
                           hintText: 'Search languages...',
                           hintStyle: TextStyle(color: Colors.white70),
-                          prefixIcon:
-                              Icon(Icons.search, color: Colors.white),
+                          prefixIcon: Icon(Icons.search, color: Colors.white),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
                               horizontal: 20, vertical: 15),
@@ -167,8 +167,7 @@ class _AssistantScreenState extends State<AssistantScreen>
                           decoration: BoxDecoration(
                             color: const Color(0x14FFFFFF),
                             borderRadius: BorderRadius.circular(12),
-                            border:
-                                Border.all(color: const Color(0x22FFFFFF)),
+                            border: Border.all(color: const Color(0x22FFFFFF)),
                           ),
                           child: ListTile(
                             title: Text(
@@ -596,8 +595,7 @@ class _AssistantScreenState extends State<AssistantScreen>
                           onChanged: (value) =>
                               setState(() => hasText = value.isNotEmpty),
                           style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600),
+                              color: Colors.white, fontWeight: FontWeight.w600),
                           decoration: InputDecoration(
                             hintText: 'Please enter what you want to say~',
                             hintStyle:
@@ -628,32 +626,40 @@ class _AssistantScreenState extends State<AssistantScreen>
                     SizedBox(width: 10),
                     Expanded(
                       flex: 1,
-                      child: GestureDetector(
-                        onTap: hasText
-                            ? () {
-                                if (!controller.isLoading.value) {
-                                  controller
-                                      .sendTypedMessage(_textController.text);
-                                }
-                                _textController.clear();
-                                setState(() => hasText = false);
-                              }
-                            : () => setState(
-                                () => showKeyboardFirst = !showKeyboardFirst),
-                        child: Container(
-                          height: 50,
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00F5D4),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            hasText ? Icons.send : Icons.mic,
-                            color: const Color(0xFF003049),
-                            size: 24,
-                          ),
-                        ),
-                      ),
+                      child: Obx(() {
+                        final isBusy = controller.isLoading.value;
+                        return GestureDetector(
+                            onTap: hasText
+                                ? () {
+                                    if (!isBusy) {
+                                      controller.sendTypedMessage(
+                                          _textController.text);
+                                    }
+                                    _textController.clear();
+                                    setState(() => hasText = false);
+                                  }
+                                : () => setState(() =>
+                                    showKeyboardFirst = !showKeyboardFirst),
+                            child: Opacity(
+                              opacity: isBusy ? 0.6 : 1.0,
+                              child: Opacity(
+                                opacity: controller.isLoading.value ? 0.6 : 1.0,
+                                child: Container(
+                                  height: 50,
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF00F5D4),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    hasText ? Icons.send : Icons.mic,
+                                    color: const Color(0xFF003049),
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ));
+                      }),
                     ),
                   ],
                 )
@@ -667,43 +673,48 @@ class _AssistantScreenState extends State<AssistantScreen>
                                 : (controller.isListening.value
                                     ? controller.stopListening
                                     : controller.startListening),
-                            child: Container(
-                              height: 50,
-                              padding: EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                color: controller.isListening.value
-                                    ? const Color(0xFF00F5D4)
-                                    : const Color(0x1AFFFFFF),
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: Colors.white24, width: 1),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    controller.isListening.value
-                                        ? Icons.stop
-                                        : Icons.mic,
-                                    color: controller.isListening.value
-                                        ? const Color(0xFF003049)
-                                        : Colors.white,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    controller.isListening.value
-                                        ? 'Stop & Send'
-                                        : 'Click and Speak',
-                                    style: GoogleFonts.manrope(
+                            child: Opacity(
+                              opacity: controller.isLoading.value ? 0.6 : 1.0,
+                              child: Container(
+                                height: 50,
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: controller.isListening.value
+                                      ? const Color(0xFF00F5D4)
+                                      : const Color(0x1AFFFFFF),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: Colors.white24, width: 1),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      controller.isListening.value
+                                          ? Icons.stop
+                                          : Icons.mic,
                                       color: controller.isListening.value
                                           ? const Color(0xFF003049)
                                           : Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
+                                      size: 20,
                                     ),
-                                  ),
-                                ],
+                                    SizedBox(width: 8),
+                                    Text(
+                                      controller.isLoading.value
+                                          ? 'Thinking...'
+                                          : (controller.isListening.value
+                                              ? 'Stop & Send'
+                                              : 'Click and Speak'),
+                                      style: GoogleFonts.manrope(
+                                        color: controller.isListening.value
+                                            ? const Color(0xFF003049)
+                                            : Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           )),
