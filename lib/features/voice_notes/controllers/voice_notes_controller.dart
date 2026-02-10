@@ -1,27 +1,28 @@
 import 'dart:io';
 import 'package:get/get.dart';
-import 'package:record/record.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import '../../../core/services/database_service.dart';
 import '../models/voice_note.dart';
 import '../../../core/services/permission_service.dart';
 
 class VoiceNotesController extends GetxController {
-  final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
   final DatabaseService _databaseService = DatabaseService();
+  final SpeechToText _speechToText = SpeechToText();
 
   RxBool isRecording = false.obs;
   RxBool isPlaying = false.obs;
+  RxBool isTranscribing = false.obs;
   RxInt recordingDuration = 0.obs;
   RxInt currentPlayingIndex = (-1).obs;
   RxList<VoiceNote> voiceNotes = <VoiceNote>[].obs;
+  RxString liveTranscript = ''.obs;
 
   // Current recording state
   String? _currentFilePath;
   String? _currentRecordingId;
+  double _lastSoundLevel = 0.0;
 
   @override
   void onInit() {
@@ -45,23 +46,76 @@ class VoiceNotesController extends GetxController {
     }
   }
 
-  Future<void> requestPermissions() async {
+  Future<bool> requestPermissions() async {
     final granted = await PermissionService.requestMicrophone();
     if (!granted) {
       Get.snackbar('Permission Denied', 'Microphone permission is required');
-      return;
+      return false;
     }
 
     // Note: Storage permission is not required for database operations
     // The database is stored in the app's private documents directory
+    return true;
   }
 
   Future<void> startRecording() async {
-    await requestPermissions();
+    final granted = await requestPermissions();
+    if (!granted) {
+      return;
+    }
 
-    final hasPermission = await _recorder.hasPermission();
-    if (!hasPermission) {
-      Get.snackbar('Permission Denied', 'Microphone permission is required');
+    // Initialize speech-to-text for live transcript
+    liveTranscript.value = '';
+    isTranscribing.value = false;
+    try {
+      if (_speechToText.isListening) {
+        await _speechToText.stop();
+      }
+      await _speechToText.cancel();
+
+      final available = await _speechToText.initialize(
+        onStatus: (status) {
+          print('VoiceNotes STT status: $status');
+          if (status == 'notListening' || status == 'done') {
+            isTranscribing.value = false;
+          }
+        },
+        onError: (error) {
+          print('VoiceNotes STT error: $error');
+          isTranscribing.value = false;
+        },
+      );
+      if (available) {
+        final systemLocale = await _speechToText.systemLocale();
+        final localeId = systemLocale?.localeId;
+        print('VoiceNotes STT locale: $localeId');
+        isTranscribing.value = true;
+        await _speechToText.listen(
+          partialResults: true,
+          listenMode: ListenMode.dictation,
+          localeId: localeId,
+          listenFor: const Duration(minutes: 2),
+          pauseFor: const Duration(seconds: 3),
+          cancelOnError: false,
+          onSoundLevelChange: (level) {
+            _lastSoundLevel = level;
+            if (level > -1.0) {
+              print('VoiceNotes STT sound: $level');
+            }
+          },
+          onResult: (result) {
+            if (result.recognizedWords.isNotEmpty) {
+              liveTranscript.value = result.recognizedWords;
+            }
+          },
+        );
+      } else {
+        Get.snackbar('Speech Recognition', 'Speech engine not available');
+        return;
+      }
+    } catch (_) {
+      isTranscribing.value = false;
+      Get.snackbar('Speech Recognition', 'Failed to start listening');
       return;
     }
 
@@ -69,21 +123,7 @@ class VoiceNotesController extends GetxController {
     recordingDuration.value = 0;
 
     _currentRecordingId = DateTime.now().millisecondsSinceEpoch.toString();
-    final documentsDir = await getApplicationDocumentsDirectory();
-    final notesDir = Directory(p.join(documentsDir.path, 'voice_notes'));
-    if (!await notesDir.exists()) {
-      await notesDir.create(recursive: true);
-    }
-    _currentFilePath = p.join(notesDir.path, '${_currentRecordingId!}.wav');
-
-    await _recorder.start(
-      const RecordConfig(
-        encoder: AudioEncoder.wav,
-        bitRate: 128000,
-        sampleRate: 16000,
-      ),
-      path: _currentFilePath!,
-    );
+    _currentFilePath = '';
 
     // Start duration timer
     _startDurationTimer();
@@ -100,16 +140,21 @@ class VoiceNotesController extends GetxController {
 
   Future<void> stopRecording() async {
     isRecording.value = false;
-    final recordedPath = await _recorder.stop();
+    if (_speechToText.isListening) {
+      await _speechToText.stop();
+    }
+    await _speechToText.cancel();
+    isTranscribing.value = false;
 
     // Create a new voice note
     final id = _currentRecordingId ?? DateTime.now().millisecondsSinceEpoch.toString();
-    final title = _formatDateTime(DateTime.now());
-    final filePath = recordedPath ?? _currentFilePath;
-    if (filePath == null) {
-      Get.snackbar('Error', 'Failed to save recording');
-      return;
-    }
+    final transcript = liveTranscript.value.trim();
+    final title = transcript.isNotEmpty
+        ? (transcript.length > 40
+            ? '${transcript.substring(0, 40)}...'
+            : transcript)
+        : _formatDateTime(DateTime.now());
+    final filePath = _currentFilePath ?? '';
 
     final newNote = VoiceNote(
       id: id,
@@ -122,7 +167,7 @@ class VoiceNotesController extends GetxController {
     try {
       await _databaseService.insertVoiceNote(newNote);
       voiceNotes.add(newNote);
-      Get.snackbar('Success', 'Voice note saved');
+      Get.snackbar('Success', 'Transcript saved');
     } catch (e) {
       print('Error saving voice note: $e');
       Get.snackbar('Error', 'Failed to save voice note');
@@ -131,6 +176,7 @@ class VoiceNotesController extends GetxController {
     recordingDuration.value = 0;
     _currentFilePath = null;
     _currentRecordingId = null;
+    liveTranscript.value = '';
   }
 
   Future<void> playVoiceNote(int index) async {
@@ -149,6 +195,12 @@ class VoiceNotesController extends GetxController {
       isPlaying.value = true;
 
       final note = voiceNotes[index];
+      if (note.filePath.isEmpty) {
+        Get.snackbar('Playback', 'No audio saved in live transcript mode');
+        currentPlayingIndex.value = -1;
+        isPlaying.value = false;
+        return;
+      }
       final file = File(note.filePath);
       if (!await file.exists()) {
         Get.snackbar('Error', 'Audio file not found');
@@ -208,7 +260,7 @@ class VoiceNotesController extends GetxController {
   @override
   void onClose() {
     _audioPlayer.dispose();
-    _recorder.dispose();
+    _speechToText.cancel();
     super.onClose();
   }
 }

@@ -195,7 +195,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   'Recording...',
                   style: AppTextStyles.heading.copyWith(
                     fontSize: 28,
-                    color: Color(0xFF0F172A),
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -204,10 +204,33 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   'Speak clearly into the microphone',
                   style: AppTextStyles.body.copyWith(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Colors.white70,
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 18),
+                Obx(() => Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.08),
+                        ),
+                      ),
+                      child: Text(
+                        controller.liveTranscript.value.isEmpty
+                            ? 'Listening...'
+                            : controller.liveTranscript.value,
+                        style: AppTextStyles.body.copyWith(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )),
               ],
             ),
           ),
@@ -239,10 +262,10 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                       ),
                     ],
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.mic_none,
                     size: 60,
-                    color: const Color(0xFF0F172A),
+                    color: Colors.white,
                   ),
                 ),
                 SizedBox(height: 30),
@@ -250,7 +273,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   'No voice notes yet',
                   style: AppTextStyles.heading.copyWith(
                     fontSize: 24,
-                    color: Color(0xFF0F172A),
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -259,7 +282,7 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                   'Tap the microphone button to start recording',
                   style: AppTextStyles.body.copyWith(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: Colors.white70,
                   ),
                   textAlign: TextAlign.center,
                 ),
