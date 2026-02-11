@@ -32,7 +32,14 @@ class AIService {
         : messages;
 
     // Build conversation history
-    final prompt = _buildPrompt(recentMessages, responseLanguage);
+    late final String prompt;
+    try {
+      prompt = _buildPrompt(recentMessages, responseLanguage);
+    } catch (e) {
+      print('Prompt build error: $e');
+      prompt =
+          'System: You are a helpful assistant. Respond in English.\nAssistant:';
+    }
     final requestBody = {
       'prompt': prompt,
     };
@@ -82,7 +89,14 @@ class AIService {
         ? messages.sublist(messages.length - 10)
         : messages;
 
-    final prompt = _buildPrompt(recentMessages, responseLanguage);
+    late final String prompt;
+    try {
+      prompt = _buildPrompt(recentMessages, responseLanguage);
+    } catch (e) {
+      print('Prompt build error: $e');
+      prompt =
+          'System: You are a helpful assistant. Respond in English.\nAssistant:';
+    }
     final requestBody = jsonEncode({
       'prompt': prompt,
       'stream': true,
@@ -141,12 +155,16 @@ class AIService {
   }
 
   String _buildPrompt(List<ChatMessage> messages, String responseLanguage) {
+    final safeLanguage =
+        responseLanguage.trim().isEmpty ? 'English' : responseLanguage.trim();
     final buffer = StringBuffer();
     buffer.writeln(
-        'System: You are a helpful assistant. Respond in $responseLanguage.');
+        'System: You are a helpful assistant. Respond in $safeLanguage.');
     for (final msg in messages) {
-      buffer
-          .writeln(msg.isUser ? 'User: ${msg.text}' : 'Assistant: ${msg.text}');
+      final role = msg.isUser ? 'User' : 'Assistant';
+      final text = msg.text.trim();
+      if (text.isEmpty) continue;
+      buffer.writeln('$role: $text');
     }
     buffer.writeln('Assistant:');
     return buffer.toString();
@@ -156,10 +174,9 @@ class AIService {
       {String? language, bool vadFilter = false}) async {
     final accountId = dotenv.env['CLOUDFLARE_ACCOUNT_ID'] ?? '';
     final apiToken = dotenv.env['CLOUDFLARE_API_TOKEN'] ?? '';
-    final model =
-        dotenv.env['CLOUDFLARE_ASR_MODEL']?.trim().isNotEmpty == true
-            ? dotenv.env['CLOUDFLARE_ASR_MODEL']!.trim()
-            : _defaultAsrModel;
+    final model = dotenv.env['CLOUDFLARE_ASR_MODEL']?.trim().isNotEmpty == true
+        ? dotenv.env['CLOUDFLARE_ASR_MODEL']!.trim()
+        : _defaultAsrModel;
     if (accountId.isEmpty || apiToken.isEmpty) {
       return 'ASR is not configured. Please set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in .env.';
     }
