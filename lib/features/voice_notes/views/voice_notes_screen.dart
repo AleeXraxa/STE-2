@@ -819,7 +819,9 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                     color: Color(0xFF0F172A),
                   ),
                 ),
-                subtitle: Row(
+                subtitle: Wrap(
+                  spacing: 10,
+                  runSpacing: 6,
                   children: [
                     Text(
                       controller.formatDuration(note.duration),
@@ -828,7 +830,6 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                         color: Colors.grey[600],
                       ),
                     ),
-                    const SizedBox(width: 10),
                     if (fileSize != null)
                       Text(
                         _formatFileSize(fileSize),
@@ -837,7 +838,6 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                           color: Colors.grey[600],
                         ),
                       ),
-                    if (fileSize != null) const SizedBox(width: 10),
                     Text(
                       '${note.createdAt.month}/${note.createdAt.day} ${note.createdAt.hour}:${note.createdAt.minute.toString().padLeft(2, '0')}',
                       style: GoogleFonts.poppins(
@@ -845,7 +845,6 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                         color: Colors.grey[600],
                       ),
                     ),
-                    if (fileMissing) const SizedBox(width: 10),
                     if (fileMissing)
                       Text(
                         'Audio missing',
@@ -854,7 +853,6 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                           color: Colors.red[400],
                         ),
                       ),
-                    if (isTranscribing) const SizedBox(width: 10),
                     if (isTranscribing)
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -871,7 +869,6 @@ class _VoiceNotesScreenState extends State<VoiceNotesScreen>
                           ),
                         ),
                       ),
-                    if (isFailed) const SizedBox(width: 10),
                     if (isFailed)
                       Container(
                         padding: const EdgeInsets.symmetric(

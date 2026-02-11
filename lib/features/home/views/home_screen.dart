@@ -252,7 +252,9 @@ class _HomeScreenState extends State<HomeScreen>
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
-                                isConnected ? Icons.bluetooth_connected : Icons.bluetooth,
+                                isConnected
+                                    ? Icons.bluetooth_connected
+                                    : Icons.bluetooth,
                                 color: isConnected
                                     ? const Color(0xFF003049)
                                     : Colors.white,
@@ -474,12 +476,6 @@ class _HomeScreenState extends State<HomeScreen>
                             Icons.translate,
                             const Color(0xFF1D6E7A),
                             () => Get.toNamed('/translation'),
-                          ),
-                          _buildFeatureCard(
-                            'Headphone & Phone',
-                            Icons.headphones,
-                            const Color(0xFF305A73),
-                            () => Get.toNamed('/headphone_phone'),
                           ),
                           _buildFeatureCard(
                             'Voice Notes',
